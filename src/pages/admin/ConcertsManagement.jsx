@@ -24,7 +24,7 @@ const ConcertManagement = () => {
 
   const fetchConcerts = async () => {
     try {
-      const response = await fetch('/api/concerts/get_concerts');
+      const response = await fetch("http://169.239.251.102:3341/~kelsey.goli/backend/concerts/get_concerts.php");
       const data = await response.json();
       if (data.status === 'success') {
         setConcerts(data.concerts);
@@ -46,7 +46,7 @@ const ConcertManagement = () => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`/api//concerts/delete_concerts?id=${id}`, {
+      const response = await fetch(`http://169.239.251.102:3341/~kelsey.goli/backend/concerts/delete_concerts.php?id=${id}`, {
         method: 'DELETE',
       });
       const data = await response.json();
@@ -70,7 +70,7 @@ const ConcertManagement = () => {
   
     // Determine the method (add or update)
     const method = selectedItem ? 'PUT' : 'POST';
-    const url = '/api/concerts/add_or_update_concert';
+    const url = 'http://169.239.251.102:3341/~kelsey.goli/backend/concerts/add_or_update_concert.php';
   
     const formData = new FormData();
     formData.append('name', concertsForm.name);
