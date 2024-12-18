@@ -65,7 +65,7 @@ const ConcertManagement = () => {
     setConcertsForm({ ...concertsForm, [name]: value });
   };
 
-  onst handleFormSubmit = async (e) => {
+  const handleFormSubmit = async (e) => {
   e.preventDefault();
   
   const formData = new FormData();
