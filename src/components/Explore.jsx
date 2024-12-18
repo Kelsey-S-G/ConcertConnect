@@ -1,6 +1,12 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const Explore = ({ concerts }) => {
+  // Ensure concerts is an array before slicing and mapping
+  if (!Array.isArray(concerts)) {
+    return <div>Error: concerts is not an array</div>;
+  }
+
   return (
     <section className="py-12">
       <div className="container mx-auto px-4">
@@ -17,6 +23,10 @@ const Explore = ({ concerts }) => {
       </div>
     </section>
   );
+};
+
+Explore.propTypes = {
+  concerts: PropTypes.array.isRequired
 };
 
 export default Explore;
