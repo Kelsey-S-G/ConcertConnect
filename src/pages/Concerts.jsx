@@ -15,54 +15,57 @@ const Concerts = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchConcerts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/concerts/get_concerts");
-        if (!response.ok) {
-          throw new Error("Failed to fetch concert data");
-        }
-        const data = await response.json();
-        
-        if (data.status === 'success' && Array.isArray(data.concerts)) {
-          const currentDate = new Date();
-          
-          // Sort concerts into upcoming and past
-          const sorted = data.concerts.reduce((acc, concert) => {
-            // Make sure we have a valid date
+  const fetchConcerts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/concerts/get_concerts", {
+        headers: { "Cache-Control": "no-cache" }, // Prevent cached responses
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch concert data");
+      }
+      const data = await response.json();
+
+      if (data.status === "success" && Array.isArray(data.concerts)) {
+        const currentDate = new Date();
+
+        // Sort concerts into upcoming and past
+        const sorted = data.concerts.reduce(
+          (acc, concert) => {
             if (concert.date) {
               const concertDate = new Date(concert.date);
-              if (concertDate >= currentDate) {
-                acc.upcoming.push(concert);
-              } else {
-                acc.past.push(concert);
-              }
+              concertDate >= currentDate ? acc.upcoming.push(concert) : acc.past.push(concert);
             }
             return acc;
-          }, { upcoming: [], past: [] });
+          },
+          { upcoming: [], past: [] }
+        );
 
-          // Sort upcoming concerts by date (earliest first)
-          sorted.upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
-          
-          // Sort past concerts by date (most recent first)
-          sorted.past.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Sort upcoming concerts by date (earliest first)
+        sorted.upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-          setUpcomingConcerts(sorted.upcoming);
-          setPastConcerts(sorted.past);
-        } else {
-          throw new Error("Invalid data format received from server");
-        }
-      } catch (err) {
-        console.error("Error fetching concerts:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        // Sort past concerts by date (most recent first)
+        sorted.past.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        setUpcomingConcerts(sorted.upcoming);
+        setPastConcerts(sorted.past);
+      } else {
+        throw new Error("Invalid data format received from server");
       }
-    };
+    } catch (err) {
+      console.error("Error fetching concerts:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchConcerts();
-  }, []);
+  fetchConcerts(); // Fetch data initially
+  const intervalId = setInterval(fetchConcerts, 30000); // Poll every 30 seconds
 
+  return () => clearInterval(intervalId); // Cleanup interval on component unmount
+}, []);
+  
   const formatDate = (dateStr) => {
     if (!dateStr) return "Date TBD";
     return new Date(dateStr).toLocaleDateString("en-US", {
