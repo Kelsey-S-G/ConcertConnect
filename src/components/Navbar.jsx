@@ -37,7 +37,7 @@ const handleLogin = async (event) => {
   }
 
   try {
-    const response = await fetch("http://169.239.251.102:3341/~kelsey.goli/backend/login.php", {
+    const response = await fetch("/api/backend/authentication/login.php", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -111,7 +111,7 @@ const handleSignUp = async (event) => {
   }
 
   try {
-    const response = await fetch("http://169.239.251.102:3341/~kelsey.goli/backend/signup.php", {
+    const response = await fetch("/api/backend/authentication/signup.php", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
