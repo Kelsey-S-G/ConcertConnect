@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, createContext, useContext } from "react";
 import PropTypes from "prop-types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/cards/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/cards/card.jsx";
 import { Calendar, MapPin, Clock, ChevronRight, DollarSign } from "lucide-react";
 import Cart from "./Cart";
+import Favorites from "./Favorites";
 import { upcomingConcerts, pastConcerts } from "../data/Data";
+
+const CartContext = createContext();
+const FavoritesContext = createContext();
 
 const Concerts = () => {
   const [cart, setCart] = useState([]);
@@ -36,6 +40,8 @@ const Concerts = () => {
 
   const ConcertCard = ({ concert, isPast }) => {
     const [showDetails, setShowDetails] = useState(false);
+    const { addToCart } = useContext(CartContext);
+    const { toggleFavorite, favorites } = useContext(FavoritesContext);
 
     return (
       <Card className="group hover:shadow-lg transition-shadow duration-300 relative overflow-hidden">
@@ -123,29 +129,32 @@ const Concerts = () => {
   };
 
   return (
-    <div>
-      <Tabs defaultValue="upcoming">
-        <TabsList>
-          <TabsTrigger value="upcoming" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">
-            Upcoming Concerts
-          </TabsTrigger>
-          <TabsTrigger value="past" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">
-            Past Concerts
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="upcoming" className="space-y-8">
-          {upcomingConcerts.map((concert) => (
-            <ConcertCard key={concert.id} concert={concert} />
-          ))}
-        </TabsContent>
-        <TabsContent value="past" className="space-y-8">
-          {pastConcerts.map((concert) => (
-            <ConcertCard key={concert.id} concert={concert} isPast />
-          ))}
-        </TabsContent>
-      </Tabs>
-      <Cart cart={cart} />
-    </div>
+    <CartContext.Provider value={{ cart, addToCart }}>
+      <FavoritesContext.Provider value={{ favorites, toggleFavorite }}>
+        <div>
+          <Tabs defaultValue="upcoming">
+            <TabsList>
+              <TabsTrigger value="upcoming" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">
+                Upcoming Concerts
+              </TabsTrigger>
+              <TabsTrigger value="past" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">
+                Past Concerts
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="upcoming" className="space-y-8">
+              {upcomingConcerts.map((concert) => (
+                <ConcertCard key={concert.id} concert={concert} />
+              ))}
+            </TabsContent>
+            <TabsContent value="past" className="space-y-8">
+              {pastConcerts.map((concert) => (
+                <ConcertCard key={concert.id} concert={concert} isPast />
+              ))}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </FavoritesContext.Provider>
+    </CartContext.Provider>
   );
 };
 
