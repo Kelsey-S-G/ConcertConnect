@@ -1,6 +1,5 @@
 import { useContext } from "react";
-import PropTypes from "prop-types";
-import { CartContext } from "./Concerts";
+import { CartContext } from "../context/ConcertContextProvider";
 
 const Cart = () => {
   const { cart } = useContext(CartContext);
@@ -17,16 +16,6 @@ const Cart = () => {
       </ul>
     </div>
   );
-};
-
-Cart.propTypes = {
-  cart: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      price: PropTypes.string.isRequired,
-    })
-  ),
 };
 
 export default Cart;
