@@ -1,24 +1,25 @@
 {
-    "rewrites": [
-        {
-            "source": "/api/authentication/login",
-            "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/authentication/login.php"
-        },
-        {
-            "source": "/api/authentication/signup",
-            "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/authentication/signup.php"
-        },
-        {
-            "source": "/api/concerts/get_concerts",
-            "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/concerts/get_concerts.php"
-        },
-        {
-            "source": "/api/concerts/add_or_update_concert",
-            "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/concerts/add_or_update_concert.php"
-          },
-          {
-            "source": "/api/concerts/delete_concerts",
-            "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/concerts/delete_concerts.php"
-          }
-    ]
+  "rewrites": [
+      {
+          "source": "/api/authentication/login",
+          "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/authentication/login.php"
+      },
+      {
+          "source": "/api/authentication/signup",
+          "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/authentication/signup.php"
+      },
+      {
+          "source": "/api/concerts/get_concerts",
+          "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/concerts/get_concerts.php"
+      },
+      {
+          "source": "/api/concerts/add_or_update_concert",
+          "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/concerts/add_or_update_concert.php"
+      },
+      {
+          "source": "/api/concerts/delete_concerts",
+          "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/concerts/delete_concerts.php"
+      }
+  ]
 }
+
