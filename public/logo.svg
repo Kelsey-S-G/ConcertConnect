@@ -6,13 +6,21 @@
       stroke-width: 2;
     }
     .note {
-      fill: #fff;
+      fill: url(#note-gradient);
       stroke: #000;
       stroke-width: 2;
     }
     .music-lines {
       stroke: #fff;
       stroke-width: 1;
+    }
+    .dots {
+      fill: #fff;
+      stroke: none;
+    }
+    .stars {
+      fill: #fff;
+      stroke: none;
     }
   </style>
   <defs>
@@ -24,12 +32,29 @@
       <stop offset="0%" style="stop-color:rgb(148,159,236);stop-opacity:1" />
       <stop offset="100%" style="stop-color:rgb(173,216,230);stop-opacity:1" />
     </linearGradient>
+    <linearGradient id="note-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgb(255,255,255);stop-opacity:0.5" />
+    </linearGradient>
   </defs>
   <circle class="globe" cx="100" cy="100" r="90"/>
-  <path class="note" d="M100 30 Q100 50 110 70 T130 100 Q130 110 120 120 T100 130 Q100 140 110 150 T130 170"/>
-  <line class="music-lines" x1="50" y1="70" x2="150" y2="70" />
-  <line class="music-lines" x1="50" y1="90" x2="150" y2="90" />
-  <line class="music-lines" x1="50" y1="110" x2="150" y2="110" />
-  <line class="music-lines" x1="50" y1="130" x2="150" y2="130" />
-  <line class="music-lines" x1="50" y1="150" x2="150" y2="150" />
+  <path class="note" d="M120 40 Q120 60 130 80 T150 110 Q150 120 140 130 T120 140 Q120 150 130 160 T150 180"/>
+  
+  <!-- Music Lines -->
+  <g>
+    <line class="music-lines" x1="50" y1="60" x2="150" y2="60"/>
+    <line class="music-lines" x1="50" y1="80" x2="150" y2="80"/>
+    <line class="music-lines" x1="50" y1="100" x2="150" y2="100"/>
+    <line class="music-lines" x1="50" y1="120" x2="150" y2="120"/>
+    <line class="music-lines" x1="50" y1="140" x2="150" y2="140"/>
+  </g>
+
+  <!-- Dots and Stars -->
+  <circle class="dots" cx="30" cy="50" r="5"/>
+  <circle class="dots" cx="170" cy="150" r="5"/>
+  <circle class="dots" cx="70" cy="175" r="3"/>
+  <circle class="dots" cx="130" cy="25" r="3"/>
+  
+  <polygon class="stars" points="160,160 165,155 170,160 165,165 160,160" />
+  <polygon class="stars" points="40,40 45,35 50,40 45,45 40,40" />
 </svg>
