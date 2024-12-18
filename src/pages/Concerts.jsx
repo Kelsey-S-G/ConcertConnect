@@ -34,69 +34,79 @@ const Concerts = () => {
     });
   };
 
-  const ConcertCard = ({ concert, isPast }) => (
-    <Card className="group hover:shadow-lg transition-shadow duration-300 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-2 h-full bg-blue-800" />
-      <CardHeader className="space-y-1 pl-6">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold uppercase tracking-wider text-blue-800">
-            {concert.genre}
-          </span>
-          {!isPast && (
-            <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-800 bg-blue-100 rounded-full">
-              Upcoming
+  const ConcertCard = ({ concert, isPast }) => {
+    const [showDetails, setShowDetails] = useState(false);
+
+    return (
+      <Card className="group hover:shadow-lg transition-shadow duration-300 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-2 h-full bg-blue-800" />
+        <CardHeader className="space-y-1 pl-6">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold uppercase tracking-wider text-blue-800">
+              {concert.genre}
             </span>
-          )}
-        </div>
-        <CardTitle className="text-2xl font-extrabold flex items-center group-hover:text-blue-800 transition-colors">
-          {concert.name}
-        </CardTitle>
-        <div className="flex items-center space-x-2 text-sm text-gray-500">
-          <Calendar className="w-4 h-4 text-blue-800" />
-          <span>{formatDate(concert.date)}</span>
-          <MapPin className="w-4 h-4 text-blue-800" />
-          <span>{concert.location}</span>
-          <Clock className="w-4 h-4 text-blue-800" />
-          <span>{concert.time}</span>
-          <DollarSign className="w-4 h-4 text-blue-800" />
-          <span>{concert.price}</span>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 text-gray-700">
-            <MapPin className="h-5 w-5 text-blue-800" />
-            <span className="font-medium">{concert.location}</span>
+            {!isPast && (
+              <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-800 bg-blue-100 rounded-full">
+                Upcoming
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-3 text-gray-700">
-            <DollarSign className="h-5 w-5 text-blue-800" />
-            <span className="font-medium">{concert.price}</span>
+          <CardTitle className="text-2xl font-extrabold flex items-center group-hover:text-blue-800 transition-colors">
+            {concert.name}
+          </CardTitle>
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <Calendar className="w-4 h-4 text-blue-800" />
+            <span>{formatDate(concert.date)}</span>
+            <MapPin className="w-4 h-4 text-blue-800" />
+            <span>{concert.location}</span>
+            <Clock className="w-4 h-4 text-blue-800" />
+            <span>{concert.time}</span>
+            <DollarSign className="w-4 h-4 text-blue-800" />
+            <span>{concert.price}</span>
           </div>
-          {!isPast ? (
-            <>
-              <button
-                onClick={() => addToCart(concert)}
-                className="bg-blue-400 text-white px-4 py-2 rounded-md"
-              >
-                Add to Cart
-              </button>
-              <button
-                onClick={() => toggleFavorite(concert)}
-                className="bg-yellow-400 text-white px-4 py-2 rounded-md ml-2"
-              >
-                {favorites.some((fav) => fav.id === concert.id) ? "Unfavorite" : "Favorite"}
-              </button>
-            </>
-          ) : (
-            <button className="text-primary flex items-center space-x-1">
-              <span>View Details</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-gray-700">
+              <MapPin className="h-5 w-5 text-blue-800" />
+              <span className="font-medium">{concert.location}</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-700">
+              <DollarSign className="h-5 w-5 text-blue-800" />
+              <span className="font-medium">{concert.price}</span>
+            </div>
+            {!isPast ? (
+              <>
+                <button
+                  onClick={() => addToCart(concert)}
+                  className="bg-blue-400 text-white px-4 py-2 rounded-md"
+                >
+                  Add to Cart
+                </button>
+                <button
+                  onClick={() => toggleFavorite(concert)}
+                  className="bg-yellow-400 text-white px-4 py-2 rounded-md ml-2"
+                >
+                  {favorites.some((fav) => fav.id === concert.id) ? "Unfavorite" : "Favorite"}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="text-primary flex items-center space-x-1"
+                >
+                  <span>View Details</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                {showDetails && <p>{concert.details}</p>}
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   ConcertCard.propTypes = {
     concert: PropTypes.shape({
@@ -116,8 +126,12 @@ const Concerts = () => {
     <div>
       <Tabs defaultValue="upcoming">
         <TabsList>
-          <TabsTrigger value="upcoming" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">Upcoming Concerts</TabsTrigger>
-          <TabsTrigger value="past" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">Past Concerts</TabsTrigger>
+          <TabsTrigger value="upcoming" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">
+            Upcoming Concerts
+          </TabsTrigger>
+          <TabsTrigger value="past" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">
+            Past Concerts
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming" className="space-y-8">
           {upcomingConcerts.map((concert) => (
