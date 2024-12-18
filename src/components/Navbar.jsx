@@ -111,7 +111,7 @@ const handleSignUp = async (event) => {
   }
 
   try {
-    const response = await fetch("/api/backend/authentication/signup.", {
+    const response = await fetch("/api/backend/authentication/signup", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
