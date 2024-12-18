@@ -12,18 +12,26 @@ const Navbar = () => {
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [loginError, setLoginError] = useState(null);
   const [signupError, setSignupError] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login status
-  const [isAdmin, setIsAdmin] = useState(false); // Track if the logged-in user is an admin
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-  const storedUser = localStorage.getItem('user');
-  if (storedUser) {
-    const parsedUser = JSON.parse(storedUser);
-    setUser(parsedUser);
-    setIsLoggedIn(true);
-    setIsAdmin(parsedUser.role === "admin");
-  }
-}, []);
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      setIsLoggedIn(true);
+      setIsAdmin(parsedUser.role === "admin");
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsLoggedIn(false);
+    setIsAdmin(false);
+    navigate('/');
+  };
 
 
 // Then you can use it in handleLogout if you want to redirect:
@@ -316,7 +324,7 @@ const handleSignUp = async (event) => {
                     <button
                       type="button"
                       onClick={() => setShowSignUpModal(true)}
-                       className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
+                      className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
                     >
                       Sign Up
                     </button>
@@ -357,6 +365,11 @@ const handleSignUp = async (event) => {
             <Link to="/favorites" className="text-white font-medium px-4 py-3 md:py-4 hover:bg-blue-700 transition-colors duration-200 text-center">Favorites</Link>
             <Link to="/cart" className="text-white font-medium px-4 py-3 md:py-4 hover:bg-blue-700 transition-colors duration-200 text-center">Cart</Link>
             <Link to="/about" className="text-white font-medium px-4 py-3 md:py-4 hover:bg-blue-700 transition-colors duration-200 text-center">About</Link>
+            {isAdmin && (
+              <>
+                <Link to="/dashboard" className="text-white font-medium px-4 py-3 md:py-4 hover:bg-blue-700 transition-colors duration-200 text-center">Dashboard</Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -368,4 +381,3 @@ const handleSignUp = async (event) => {
 };
 
 export default Navbar;
-
