@@ -37,7 +37,7 @@ const handleLogin = async (event) => {
   }
 
   try {
-    const response = await fetch("/api/backend/authentication/login.php", {
+    const response = await fetch("/api/backend/authentication/login", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -111,7 +111,7 @@ const handleSignUp = async (event) => {
   }
 
   try {
-    const response = await fetch("/api/backend/authentication/signup.php", {
+    const response = await fetch("/api/backend/authentication/signup", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
