@@ -11,7 +11,7 @@ const Home = () => {
   useEffect(() => {
     const fetchConcerts = async () => {
       try {
-        const response = await fetch('http://169.239.251.102:3341/~kelsey.goli/backend/concerts/get_concerts.php'); // Change this URL based on your actual endpoint
+        const response = await fetch('/api/concerts/get_concerts'); // Change this URL based on your actual endpoint
         if (!response.ok) {
           throw new Error('Failed to fetch concerts');
         }
