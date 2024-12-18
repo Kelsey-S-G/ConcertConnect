@@ -188,39 +188,28 @@ const Navbar = () => {
               />
               <span className="text-xl font-bold text-blue-800">ConcertConnect</span>
             </Link>
+
             <div className="hidden md:flex items-center space-x-4">
-              {isLoggedIn && isAdmin && (
-                <Link to="/dashboard" className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors">
-                  Dashboard
-                </Link>
-              )}
-              {!isLoggedIn ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setShowSignUpModal(true)}
-                    className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
-                  >
-                    Sign Up
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowLoginModal(true)}
-                    className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
-                  >
-                    Log in
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsLoggedIn(false)} // Logout logic
-                  className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  Log Out
-                </button>
-              )}
+              <Link to="/concerts" className="text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors">Concerts</Link>
+              <Link to="/favorites" className="text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors">Favorites</Link>
+              <Link to="/cart" className="text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors">Cart</Link>
+              <Link to="/about" className="text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors">About</Link>
+              <button
+                type="button"
+                onClick={() => setShowSignUpModal(true)}
+                className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                Sign Up
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLoginModal(true)}
+                className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                Log in
+              </button>
             </div>
+
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden rounded-lg p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-800"
@@ -236,6 +225,21 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      <nav
+        className={`bg-blue-800 ${isMobileMenuOpen ? "block" : "hidden md:block"}`}
+        aria-label="Main navigation"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:justify-center md:items-center">
+            <Link to="/concerts" className="text-white font-medium px-4 py-3 md:py-4 hover:bg-blue-700 transition-colors duration-200 text-center">Concerts</Link>
+            <Link to="/favorites" className="text-white font-medium px-4 py-3 md:py-4 hover:bg-blue-700 transition-colors duration-200 text-center">Favorites</Link>
+            <Link to="/cart" className="text-white font-medium px-4 py-3 md:py-4 hover:bg-blue-700 transition-colors duration-200 text-center">Cart</Link>
+            <Link to="/about" className="text-white font-medium px-4 py-3 md:py-4 hover:bg-blue-700 transition-colors duration-200 text-center">About</Link>
+          </div>
+        </div>
+      </nav>
+
       {showLoginModal && <LoginForm />}
       {showSignUpModal && <SignUpForm />}
     </header>
@@ -243,3 +247,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
