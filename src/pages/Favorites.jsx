@@ -1,6 +1,5 @@
 import { useContext } from "react";
-import PropTypes from "prop-types";
-import { FavoritesContext } from "./Concerts";
+import { FavoritesContext } from "../context/ConcertContextProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/cards/card.jsx";
 import { Calendar, MapPin, Clock, DollarSign } from "lucide-react";
 
@@ -45,21 +44,6 @@ const Favorites = () => {
       )}
     </div>
   );
-};
-
-Favorites.propTypes = {
-  favorites: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      date: PropTypes.string.isRequired,
-      time: PropTypes.string.isRequired,
-      location: PropTypes.string.isRequired,
-      details: PropTypes.string.isRequired,
-      genre: PropTypes.string.isRequired,
-      price: PropTypes.string.isRequired,
-    })
-  ),
 };
 
 export default Favorites;
