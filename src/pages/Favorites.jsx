@@ -15,7 +15,7 @@ const Favorites = ({ favorites }) => {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Favorited Concerts</h2>
-      {favorites.length === 0 ? (
+      {!favorites || favorites.length === 0 ? (
         <p>No favorited concerts.</p>
       ) : (
         favorites.map((concert) => (
