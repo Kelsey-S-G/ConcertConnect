@@ -1,6 +1,10 @@
+import { useContext } from "react";
 import PropTypes from "prop-types";
+import { CartContext } from "./Concerts";
 
-const Cart = ({ cart }) => {
+const Cart = () => {
+  const { cart } = useContext(CartContext);
+
   return (
     <div>
       <p>Number of items in cart: {cart ? cart.length : 0}</p>
@@ -22,7 +26,7 @@ Cart.propTypes = {
       name: PropTypes.string.isRequired,
       price: PropTypes.string.isRequired,
     })
-  ).isRequired,
+  ),
 };
 
 export default Cart;
