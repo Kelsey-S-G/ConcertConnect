@@ -1,23 +1,23 @@
 {
   "rewrites": [
       {
-          "source": "/api/auth/login",
+          "source": "/api/backend/auth/login",
           "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/auth/login.php"
       },
       {
-          "source": "/api/authentication/signup",
+          "source": "/api/backend/auth/signup",
           "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/auth/signup.php"
       },
       {
-          "source": "/api/concerts/get_concerts",
+          "source": "/api/backend/concerts/get_concerts",
           "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/concerts/get_concerts.php"
       },
       {
-          "source": "/api/concerts/add_or_update_concert",
+          "source": "/api/backend/concerts/add_or_update_concert",
           "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/concerts/add_or_update_concert.php"
       },
       {
-          "source": "/api/concerts/delete_concerts",
+          "source": "/api/backend/concerts/delete_concerts",
           "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/concerts/delete_concerts.php"
       }
   ],
