@@ -33,16 +33,6 @@ const Navbar = () => {
     navigate('/');
   };
 
-
-// Then you can use it in handleLogout if you want to redirect:
-const handleLogout = () => {
-  localStorage.removeItem('user');
-  setUser(null);
-  setIsLoggedIn(false);
-  setIsAdmin(false);
-  navigate('/');
-};
-
 const handleLogin = async (event) => {
   event.preventDefault();
   const email = event.target.email.value;
