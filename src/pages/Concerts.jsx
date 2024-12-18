@@ -17,7 +17,7 @@ const Concerts = () => {
   useEffect(() => {
     const fetchConcerts = async () => {
       try {
-        const response = await fetch("/api/concerts/get_concerts");
+        const response = await fetch("http://169.239.251.102:3341/~kelsey.goli/backend/concerts/get_concerts.php");
         if (!response.ok) {
           throw new Error("Failed to fetch concert data");
         }
