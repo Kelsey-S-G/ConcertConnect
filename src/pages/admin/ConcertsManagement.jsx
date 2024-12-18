@@ -65,43 +65,41 @@ const ConcertManagement = () => {
     setConcertsForm({ ...concertsForm, [name]: value });
   };
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData();
-    Object.keys(concertsForm).forEach(key => {
-      formData.append(key, concertsForm[key] || '');
+  onst handleFormSubmit = async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData();
+  Object.keys(concertsForm).forEach(key => {
+    formData.append(key, concertsForm[key] || '');
+  });
+
+  try {
+    const response = await fetch('/api/concerts/add_or_update_concert', {
+      method: 'POST',
+      body: formData,
     });
-    
-    if (selectedItem && selectedItem.concert_id) {  // Change from id to concert_id
-      formData.append('id', selectedItem.concert_id);
-    }
-    
-    try {
-      const response = await fetch('/api/concerts/add_or_update_concert', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-      
-      if (data.status === 'success') {
-        if (selectedItem) {
-          setConcerts(concerts.map(concert => 
-            concert.concert_id === selectedItem.concert_id  // Change from id to concert_id
-              ? { ...concertsForm, concert_id: selectedItem.concert_id }
-              : concert
-          ));
-        } else {
-          setConcerts([...concerts, { ...concertsForm, concert_id: data.id }]);  // Use the ID from the response
-        }
-        closeModal();
+    const data = await response.json();
+
+    if (data.status === 'success') {
+      if (selectedItem) {
+        // Update the existing concert
+        setConcerts(concerts.map(concert => 
+          concert.concert_id === selectedItem.concert_id
+            ? { ...concert, ...concertsForm } // Only update the matching concert
+            : concert
+        ));
       } else {
-        alert('Error: ' + data.message);
+        // Add a new concert
+        setConcerts([...concerts, { ...concertsForm, concert_id: data.id }]);
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('An error occurred while submitting the concert.');
+      closeModal();
+    } else {
+      alert('Error: ' + data.message);
     }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('An error occurred while submitting the concert.');
+  }
 };
 
   const closeModal = () => {
