@@ -190,10 +190,6 @@ const Navbar = () => {
             </Link>
 
             <div className="hidden md:flex items-center space-x-4">
-              <Link to="/concerts" className="text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors">Concerts</Link>
-              <Link to="/favorites" className="text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors">Favorites</Link>
-              <Link to="/cart" className="text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors">Cart</Link>
-              <Link to="/about" className="text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors">About</Link>
               <button
                 type="button"
                 onClick={() => setShowSignUpModal(true)}
