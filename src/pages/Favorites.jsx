@@ -1,8 +1,12 @@
+import { useContext } from "react";
 import PropTypes from "prop-types";
+import { FavoritesContext } from "./Concerts";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/cards/card.jsx";
 import { Calendar, MapPin, Clock, DollarSign } from "lucide-react";
 
-const Favorites = ({ favorites }) => {
+const Favorites = () => {
+  const { favorites } = useContext(FavoritesContext);
+
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
       weekday: "long",
@@ -55,7 +59,7 @@ Favorites.propTypes = {
       genre: PropTypes.string.isRequired,
       price: PropTypes.string.isRequired,
     })
-  ).isRequired,
+  ),
 };
 
 export default Favorites;
