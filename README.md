@@ -1,3 +1,5 @@
+
+Markdown
 # ConcertConnect
 
 ConcertConnect is a React application built with Vite, designed to manage and view concert events.
@@ -24,24 +26,28 @@ ConcertConnect is a dynamic web application that provides users with the latest 
    ```bash
    git clone https://github.com/Kelsey-S-G/ConcertConnect.git
    cd ConcertConnect
-Public code references from 3 repositories
-Install dependencies:
 
+
+## Install dependencies:
+```bash
 npm install
-Public code references from 3 repositories
+```
 Start the development server:
-
+```bash
 npm run dev
-Public code references from 3 repositories
-Build for production:
+```
 
+Build for production:
+```bash
 npm run build
-Public code references from 3 repositories
-How to Deploy
+```
+
+
+## How to Deploy
 To deploy the application, you can use platforms like Vercel, Netlify, or GitHub Pages. Follow the respective platform's deployment guide for React applications.
 
-Project Structure
-Code
+##Project Structure
+```bash
 ConcertConnect/
 ├── public/
 │   ├── index.html
@@ -70,7 +76,9 @@ ConcertConnect/
 ├── tailwind.config.js
 ├── postcss.config.js
 └── package.json
-Public code references from 3 repositories
-Plugins
+```
+
+## Plugins
 @vitejs/plugin-react uses Babel for Fast Refresh
 @vitejs/plugin-react-swc uses SWC for Fast Refresh
+You can now update your README file with this content.
