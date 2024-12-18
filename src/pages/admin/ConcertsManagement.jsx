@@ -17,23 +17,26 @@ const ConcertManagement = () => {
     price: ''
   });
 
-  // Simulate fetching concerts
+  // Fetch concerts from the API on mount
   useEffect(() => {
-    const data = [
-      {
-        id: 1,
-        name: "Rock Fest",
-        date: "2024-04-15",
-        time: "7:00 PM",
-        location: "City Arena",
-        details: "A night of rock music featuring top bands.",
-        genre: "Rock",
-        price: "$50"
-      }
-    ];
-    setConcerts(data);
-    setLoading(false);
+    fetchConcerts();
   }, []);
+
+  const fetchConcerts = async () => {
+    try {
+      const response = await fetch('/api/concerts/get_concerts');
+      const data = await response.json();
+      if (data.status === 'success') {
+        setConcerts(data.concerts);
+      } else {
+        console.error('Error fetching concerts:', data.message);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error:', error);
+      setLoading(false);
+    }
+  };
 
   const handleEdit = (concert) => {
     setSelectedItem(concert);
@@ -41,8 +44,20 @@ const ConcertManagement = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
-    setConcerts(concerts.filter(concert => concert.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`/api//concerts/delete_concerts?id=${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        setConcerts(concerts.filter(concert => concert.id !== id));
+      } else {
+        console.error('Error deleting concert:', data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const handleFormChange = (e) => {
@@ -52,23 +67,66 @@ const ConcertManagement = () => {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
+  
+    // Determine the method (add or update)
+    const method = selectedItem ? 'PUT' : 'POST';
+    const url = '/api/concerts/add_or_update_concert';
+  
+    const formData = new FormData();
+    formData.append('name', concertsForm.name);
+    formData.append('date', concertsForm.date);
+    formData.append('time', concertsForm.time);
+    formData.append('location', concertsForm.location);
+    formData.append('details', concertsForm.details || ''); // Make sure to handle empty details
+    formData.append('genre', concertsForm.genre);
+    formData.append('price', concertsForm.price);
+    formData.append('type', concertsForm.type); // Add concert type (upcoming or past)
+    formData.append('results', concertsForm.results || ''); // Optional field for results
     if (selectedItem) {
-      setConcerts(concerts.map(concert => concert.id === selectedItem.id ? concertsForm : concert));
-    } else {
-      setConcerts([...concerts, { ...concertsForm, id: Date.now() }]);
+      formData.append('id', selectedItem.id); // Add the id if updating
     }
-    setIsModalOpen(false);
-    setConcertsForm({
-      id: '',
-      name: '',
-      date: '',
-      time: '',
-      location: '',
-      details: '',
-      genre: '',
-      price: ''
-    });
+  
+    // Make the request to the PHP file
+    fetch(url, {
+      method: 'POST', // Use POST for both add and update
+      body: formData,
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          // If successful, update the state
+          if (selectedItem) {
+            // Update the concert in the list
+            setConcerts(concerts.map(concert => concert.id === selectedItem.id ? { ...concertsForm, id: selectedItem.id } : concert));
+          } else {
+            // Add new concert to the list
+            setConcerts([...concerts, { ...concertsForm, id: Date.now() }]); // Use Date.now() for unique ID if adding
+          }
+          // Close the modal and reset the form
+          setIsModalOpen(false);
+          setConcertsForm({
+            id: '',
+            name: '',
+            date: '',
+            time: '',
+            location: '',
+            details: '',
+            genre: '',
+            price: '',
+            type: 'upcoming', // Default to upcoming
+            results: ''
+          });
+        } else {
+          // Handle error
+          alert('There was an error processing the concert: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while submitting the concert.');
+      });
   };
+  
 
   return (
     <div className="container mx-auto p-4">
@@ -231,6 +289,12 @@ const ConcertManagement = () => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+export default ConcertManagement;
+
     </div>
   );
 };
