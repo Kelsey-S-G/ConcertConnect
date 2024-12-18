@@ -22,8 +22,8 @@ const Concerts = () => {
           throw new Error("Failed to fetch concert data");
         }
         const data = await response.json();
-        setUpcomingConcerts(data.upcoming);
-        setPastConcerts(data.past);
+        setUpcomingConcerts(data.upcoming || []);
+        setPastConcerts(data.past || []);
         setLoading(false);
       } catch (err) {
         setError(err.message);
