@@ -5,7 +5,7 @@ import Concerts from "./pages/Concerts";
 import Favorites from "./pages/Favorites";
 import Cart from "./pages/Cart";
 import About from "./pages/About";
-import Dashboard from ".pages/admin/Dashboard";
+import Dashboard from "./pages/admin/Dashboard";
 import ConcertContextProvider from "./context/ConcertContextProvider";
 import "./App.css";
 
