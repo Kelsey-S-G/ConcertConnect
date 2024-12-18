@@ -1,14 +1,38 @@
-import { useState, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/cards/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/cards/card.jsx";
 import { Calendar, MapPin, Clock, ChevronRight, DollarSign } from "lucide-react";
 import { CartContext, FavoritesContext } from "../context/ConcertContextProvider";
-import { upcomingConcerts, pastConcerts } from "../data/Data";
 
 const Concerts = () => {
   const { cart, toggleCart } = useContext(CartContext);
   const { favorites, toggleFavorite } = useContext(FavoritesContext);
+
+  const [upcomingConcerts, setUpcomingConcerts] = useState([]);
+  const [pastConcerts, setPastConcerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchConcerts = async () => {
+      try {
+        const response = await fetch("/api/concerts/get_concerts");
+        if (!response.ok) {
+          throw new Error("Failed to fetch concert data");
+        }
+        const data = await response.json();
+        setUpcomingConcerts(data.upcoming);
+        setPastConcerts(data.past);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchConcerts();
+  }, []);
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
@@ -102,12 +126,15 @@ const Concerts = () => {
       date: PropTypes.string.isRequired,
       time: PropTypes.string.isRequired,
       location: PropTypes.string.isRequired,
-      details: PropTypes.string.isRequired,
+      details: PropTypes.string,
       genre: PropTypes.string.isRequired,
       price: PropTypes.string.isRequired,
     }).isRequired,
     isPast: PropTypes.bool,
   };
+
+  if (loading) return <p>Loading concerts...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div>
@@ -136,3 +163,4 @@ const Concerts = () => {
 };
 
 export default Concerts;
+
