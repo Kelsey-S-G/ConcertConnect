@@ -80,8 +80,7 @@ const ConcertManagement = () => {
     formData.append('details', concertsForm.details || ''); // Make sure to handle empty details
     formData.append('genre', concertsForm.genre);
     formData.append('price', concertsForm.price);
-    formData.append('type', concertsForm.type); // Add concert type (upcoming or past)
-    formData.append('results', concertsForm.results || ''); // Optional field for results
+    formData.append('status', concertsForm.status); // Add concert type (upcoming or past)
     if (selectedItem) {
       formData.append('id', selectedItem.id); // Add the id if updating
     }
@@ -113,8 +112,7 @@ const ConcertManagement = () => {
             details: '',
             genre: '',
             price: '',
-            type: 'upcoming', // Default to upcoming
-            results: ''
+            status: 'upcoming', // Default to upcoming''
           });
         } else {
           // Handle error
@@ -151,6 +149,7 @@ const ConcertManagement = () => {
                 <th className="py-2">Details</th>
                 <th className="py-2">Genre</th>
                 <th className="py-2">Price</th>
+                <th className="py-2">Status</th>
                 <th className="py-2">Actions</th>
               </tr>
             </thead>
@@ -164,6 +163,7 @@ const ConcertManagement = () => {
                   <td className="border px-4 py-2">{concert.details}</td>
                   <td className="border px-4 py-2">{concert.genre}</td>
                   <td className="border px-4 py-2">{concert.price}</td>
+                  <td className="border px-4 py-2">{concert.status}</td>
                   <td className="border px-4 py-2">
                     <button
                       className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
@@ -274,6 +274,18 @@ const ConcertManagement = () => {
                   id="price"
                   name="price"
                   value={concertsForm.price}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="status" className="block text-gray-700 mb-2">Price</label>
+                <input
+                  type="text"
+                  id="status"
+                  name="status"
+                  value={concertsForm.status}
                   onChange={handleFormChange}
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
                   required
