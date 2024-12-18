@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaTimes } from 'react-icons/fa';
 
 const ConcertManagement = () => {
   const [concerts, setConcerts] = useState([]);
@@ -14,10 +14,10 @@ const ConcertManagement = () => {
     location: '',
     details: '',
     genre: '',
-    price: ''
+    price: '',
+    status: 'upcoming'
   });
 
-  // Fetch concerts from the API on mount
   useEffect(() => {
     fetchConcerts();
   }, []);
@@ -65,239 +65,224 @@ const ConcertManagement = () => {
     setConcertsForm({ ...concertsForm, [name]: value });
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-  
-    // Determine the method (add or update)
-    const method = selectedItem ? 'PUT' : 'POST';
-    const url = '/api/concerts/add_or_update_concert';
-  
+    
     const formData = new FormData();
-    formData.append('name', concertsForm.name);
-    formData.append('date', concertsForm.date);
-    formData.append('time', concertsForm.time);
-    formData.append('location', concertsForm.location);
-    formData.append('details', concertsForm.details || ''); // Make sure to handle empty details
-    formData.append('genre', concertsForm.genre);
-    formData.append('price', concertsForm.price);
-    formData.append('status', concertsForm.status); // Add concert type (upcoming or past)
+    Object.keys(concertsForm).forEach(key => {
+      formData.append(key, concertsForm[key] || '');
+    });
+    
     if (selectedItem) {
-      formData.append('id', selectedItem.id); // Add the id if updating
+      formData.append('id', selectedItem.id);
     }
-  
-    // Make the request to the PHP file
-    fetch(url, {
-      method: 'POST', // Use POST for both add and update
-      body: formData,
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          // If successful, update the state
-          if (selectedItem) {
-            // Update the concert in the list
-            setConcerts(concerts.map(concert => concert.id === selectedItem.id ? { ...concertsForm, id: selectedItem.id } : concert));
-          } else {
-            // Add new concert to the list
-            setConcerts([...concerts, { ...concertsForm, id: Date.now() }]); // Use Date.now() for unique ID if adding
-          }
-          // Close the modal and reset the form
-          setIsModalOpen(false);
-          setConcertsForm({
-            id: '',
-            name: '',
-            date: '',
-            time: '',
-            location: '',
-            details: '',
-            genre: '',
-            price: '',
-            status: 'upcoming', // Default to upcoming''
-          });
-        } else {
-          // Handle error
-          alert('There was an error processing the concert: ' + data.message);
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while submitting the concert.');
+    
+    try {
+      const response = await fetch('/api/concerts/add_or_update_concert', {
+        method: 'POST',
+        body: formData,
       });
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        if (selectedItem) {
+          setConcerts(concerts.map(concert => 
+            concert.id === selectedItem.id ? { ...concertsForm, id: selectedItem.id } : concert
+          ));
+        } else {
+          setConcerts([...concerts, { ...concertsForm, id: Date.now() }]);
+        }
+        closeModal();
+      } else {
+        alert('Error: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while submitting the concert.');
+    }
   };
-  
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedItem(null);
+    setConcertsForm({
+      id: '',
+      name: '',
+      date: '',
+      time: '',
+      location: '',
+      details: '',
+      genre: '',
+      price: '',
+      status: 'upcoming'
+    });
+  };
+
+  const FormInput = ({ label, name, type = 'text', ...props }) => (
+    <div className="mb-4">
+      <label htmlFor={name} className="block text-gray-700 text-sm font-medium mb-1">
+        {label}
+      </label>
+      {type === 'textarea' ? (
+        <textarea
+          id={name}
+          name={name}
+          onChange={handleFormChange}
+          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+          rows="3"
+          {...props}
+        />
+      ) : (
+        <input
+          type={type}
+          id={name}
+          name={name}
+          onChange={handleFormChange}
+          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+          {...props}
+        />
+      )}
+    </div>
+  );
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Concert Management</h1>
+      
       {loading ? (
         <p>Loading...</p>
       ) : (
         <div>
           <button
-            className="bg-blue-700 text-white px-4 py-2 rounded mb-4"
+            className="bg-blue-600 text-white px-4 py-2 rounded mb-4 hover:bg-blue-700 transition-colors"
             onClick={() => setIsModalOpen(true)}
           >
             <FaPlus className="inline mr-2" /> Add Concert
           </button>
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr>
-                <th className="py-2">Name</th>
-                <th className="py-2">Date</th>
-                <th className="py-2">Time</th>
-                <th className="py-2">Location</th>
-                <th className="py-2">Details</th>
-                <th className="py-2">Genre</th>
-                <th className="py-2">Price</th>
-                <th className="py-2">Status</th>
-                <th className="py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {concerts.map(concert => (
-                <tr key={concert.id}>
-                  <td className="border px-4 py-2">{concert.name}</td>
-                  <td className="border px-4 py-2">{concert.date}</td>
-                  <td className="border px-4 py-2">{concert.time}</td>
-                  <td className="border px-4 py-2">{concert.location}</td>
-                  <td className="border px-4 py-2">{concert.details}</td>
-                  <td className="border px-4 py-2">{concert.genre}</td>
-                  <td className="border px-4 py-2">{concert.price}</td>
-                  <td className="border px-4 py-2">{concert.status}</td>
-                  <td className="border px-4 py-2">
-                    <button
-                      className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                      onClick={() => handleEdit(concert)}
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      className="bg-blue-500 text-white px-2 py-1 rounded"
-                      onClick={() => handleDelete(concert.id)}
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
+          
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border">
+              <thead className="bg-gray-50">
+                <tr>
+                  {['Name', 'Date', 'Time', 'Location', 'Details', 'Genre', 'Price', 'Status', 'Actions'].map(header => (
+                    <th key={header} className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                      {header}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {concerts.map(concert => (
+                  <tr key={concert.id}>
+                    <td className="px-4 py-2">{concert.name}</td>
+                    <td className="px-4 py-2">{concert.date}</td>
+                    <td className="px-4 py-2">{concert.time}</td>
+                    <td className="px-4 py-2">{concert.location}</td>
+                    <td className="px-4 py-2">{concert.details}</td>
+                    <td className="px-4 py-2">{concert.genre}</td>
+                    <td className="px-4 py-2">{concert.price}</td>
+                    <td className="px-4 py-2">{concert.status}</td>
+                    <td className="px-4 py-2">
+                      <button
+                        className="text-blue-600 p-1 hover:text-blue-800 mr-2"
+                        onClick={() => handleEdit(concert)}
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        className="text-red-600 p-1 hover:text-red-800"
+                        onClick={() => handleDelete(concert.id)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full relative">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              <FaTrash className="h-6 w-6" />
-            </button>
-            <h2 className="text-2xl font-bold mb-6">{selectedItem ? 'Edit Concert' : 'Add Concert'}</h2>
-            <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-gray-700 mb-2">Name</label>
-                <input
-                  type="text"
-                  id="name"
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 my-8">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-semibold">
+                {selectedItem ? 'Edit Concert' : 'Add Concert'}
+              </h2>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 max-h-[70vh] overflow-y-auto">
+              <form onSubmit={handleFormSubmit} className="space-y-4">
+                <FormInput 
+                  label="Name"
                   name="name"
                   value={concertsForm.name}
-                  onChange={handleFormChange}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="date" className="block text-gray-700 mb-2">Date</label>
-                <input
-                  type="date"
-                  id="date"
+                <FormInput 
+                  label="Date"
                   name="date"
+                  type="date"
                   value={concertsForm.date}
-                  onChange={handleFormChange}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="time" className="block text-gray-700 mb-2">Time</label>
-                <input
-                  type="time"
-                  id="time"
+                <FormInput 
+                  label="Time"
                   name="time"
+                  type="time"
                   value={concertsForm.time}
-                  onChange={handleFormChange}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="location" className="block text-gray-700 mb-2">Location</label>
-                <input
-                  type="text"
-                  id="location"
+                <FormInput 
+                  label="Location"
                   name="location"
                   value={concertsForm.location}
-                  onChange={handleFormChange}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="details" className="block text-gray-700 mb-2">Details</label>
-                <textarea
-                  id="details"
+                <FormInput 
+                  label="Details"
                   name="details"
+                  type="textarea"
                   value={concertsForm.details}
-                  onChange={handleFormChange}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="genre" className="block text-gray-700 mb-2">Genre</label>
-                <input
-                  type="text"
-                  id="genre"
+                <FormInput 
+                  label="Genre"
                   name="genre"
                   value={concertsForm.genre}
-                  onChange={handleFormChange}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="price" className="block text-gray-700 mb-2">Price</label>
-                <input
-                  type="text"
-                  id="price"
+                <FormInput 
+                  label="Price"
                   name="price"
                   value={concertsForm.price}
-                  onChange={handleFormChange}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="status" className="block text-gray-700 mb-2">Price</label>
-                <input
-                  type="text"
-                  id="status"
+                <FormInput 
+                  label="Status"
                   name="status"
                   value={concertsForm.status}
-                  onChange={handleFormChange}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800"
                   required
                 />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-blue-800 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                {selectedItem ? 'Update Concert' : 'Add Concert'}
-              </button>
-            </form>
+                
+                <div className="pt-4 border-t">
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    {selectedItem ? 'Update Concert' : 'Add Concert'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
