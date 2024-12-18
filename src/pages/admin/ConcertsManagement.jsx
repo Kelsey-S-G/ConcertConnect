@@ -73,8 +73,8 @@ const ConcertManagement = () => {
       formData.append(key, concertsForm[key] || '');
     });
     
-    if (selectedItem) {
-      formData.append('id', selectedItem.id);
+    if (selectedItem && selectedItem.concert_id) {  // Change from id to concert_id
+      formData.append('id', selectedItem.concert_id);
     }
     
     try {
@@ -87,10 +87,12 @@ const ConcertManagement = () => {
       if (data.status === 'success') {
         if (selectedItem) {
           setConcerts(concerts.map(concert => 
-            concert.id === selectedItem.id ? { ...concertsForm, id: selectedItem.id } : concert
+            concert.concert_id === selectedItem.concert_id  // Change from id to concert_id
+              ? { ...concertsForm, concert_id: selectedItem.concert_id }
+              : concert
           ));
         } else {
-          setConcerts([...concerts, { ...concertsForm, id: Date.now() }]);
+          setConcerts([...concerts, { ...concertsForm, concert_id: data.id }]);  // Use the ID from the response
         }
         closeModal();
       } else {
@@ -100,7 +102,7 @@ const ConcertManagement = () => {
       console.error('Error:', error);
       alert('An error occurred while submitting the concert.');
     }
-  };
+};
 
   const closeModal = () => {
     setIsModalOpen(false);
