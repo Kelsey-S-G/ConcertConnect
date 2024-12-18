@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useState, useContext } from "react";
 import PropTypes from "prop-types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/cards/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/cards/card.jsx";
