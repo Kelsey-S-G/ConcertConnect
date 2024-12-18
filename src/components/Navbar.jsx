@@ -48,7 +48,7 @@ const Navbar = () => {
     const password = event.target.password.value;
 
     try {
-      const response = await fetch("/api/authentication/signup", {
+      const response = await fetch("http://169.239.251.102:3341/~kelsey.goli/backend/authentication/signup.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password }),
