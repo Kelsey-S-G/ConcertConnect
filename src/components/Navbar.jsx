@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import concertConnectLogo from "../images/Logo.png";
 
 const Navbar = () => {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
@@ -13,17 +16,24 @@ const Navbar = () => {
   const [isAdmin, setIsAdmin] = useState(false); // Track if the logged-in user is an admin
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+  const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    const parsedUser = JSON.parse(storedUser);
+    setUser(parsedUser);
+    setIsLoggedIn(true);
+    setIsAdmin(parsedUser.role === "admin");
+  }
+}, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    navigate('/');
-  };
+
+// Then you can use it in handleLogout if you want to redirect:
+const handleLogout = () => {
+  localStorage.removeItem('user');
+  setUser(null);
+  setIsLoggedIn(false);
+  setIsAdmin(false);
+  navigate('/');
+};
 
 const handleLogin = async (event) => {
   event.preventDefault();
@@ -71,14 +81,12 @@ const handleLogin = async (event) => {
 
     if (result.success) {
       console.log("Login successful:", result.user);
-      
-      // Store user info in local storage for persistence
       localStorage.setItem('user', JSON.stringify(result.user));
-      
       setShowLoginModal(false);
       setLoginError(null);
       setIsLoggedIn(true);
       setIsAdmin(result.user.role === "admin");
+      setUser(result.user);
     } else {
       setLoginError(result.error || "Login failed");
     }
@@ -292,20 +300,35 @@ const handleSignUp = async (event) => {
             </Link>
 
             <div className="hidden md:flex items-center space-x-4">
-              <button
-                type="button"
-                onClick={() => setShowSignUpModal(true)}
-                className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                Sign Up
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowLoginModal(true)}
-                className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                Log in
-              </button>
+                {user ? (
+                  <div className="flex items-center space-x-4">
+                    <span className="text-blue-700">{user.email}</span>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 rounded-md transition-colors"
+                      >
+                        Logout
+                      </button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowSignUpModal(true)}
+                       className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
+                    >
+                      Sign Up
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginModal(true)}
+                      className="px-4 py-2 text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
+                    >
+                      Log in
+                    </button>
+                  </>
+                )}
             </div>
 
             <button
