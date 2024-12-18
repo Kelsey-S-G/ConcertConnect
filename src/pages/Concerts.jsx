@@ -7,7 +7,7 @@ import { CartContext, FavoritesContext } from "../context/ConcertContextProvider
 import { upcomingConcerts, pastConcerts } from "../data/Data";
 
 const Concerts = () => {
-  const { cart, addToCart } = useContext(CartContext);
+  const { cart, toggleCart } = useContext(CartContext);
   const { favorites, toggleFavorite } = useContext(FavoritesContext);
 
   const formatDate = (dateStr) => {
@@ -21,6 +21,8 @@ const Concerts = () => {
 
   const ConcertCard = ({ concert, isPast }) => {
     const [showDetails, setShowDetails] = useState(false);
+
+    const isInCart = cart.some((item) => item.id === concert.id);
 
     return (
       <Card className="group hover:shadow-lg transition-shadow duration-300 relative overflow-hidden">
@@ -63,10 +65,10 @@ const Concerts = () => {
             {!isPast ? (
               <>
                 <button
-                  onClick={() => addToCart(concert)}
-                  className="bg-blue-400 text-white px-4 py-2 rounded-md"
+                  onClick={() => toggleCart(concert)}
+                  className={`px-4 py-2 rounded-md ${isInCart ? 'bg-red-400 text-white' : 'bg-blue-400 text-white'}`}
                 >
-                  Add to Cart
+                  {isInCart ? 'Remove from Cart' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={() => toggleFavorite(concert)}
