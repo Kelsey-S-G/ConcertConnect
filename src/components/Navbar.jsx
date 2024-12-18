@@ -12,62 +12,151 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login status
   const [isAdmin, setIsAdmin] = useState(false); // Track if the logged-in user is an admin
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    const email = event.target.email.value;
-    const password = event.target.password.value;
+const handleLogin = async (event) => {
+  event.preventDefault();
+  const email = event.target.email.value;
+  const password = event.target.password.value;
 
-    try {
-      const response = await fetch("/api/authentication/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+  // Client-side validation
+  if (!email || !password) {
+    setLoginError("Email and password are required");
+    return;
+  }
 
-      const result = await response.json();
-      if (result.success) {
-        console.log("Login successful:", result.user);
-        setShowLoginModal(false);
-        setLoginError(null);
-        setIsLoggedIn(true);
-        setIsAdmin(result.user.role === "admin"); // Assuming the result has a role field
-      } else {
-        setLoginError(result.error || "Login failed");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      setLoginError("An error occurred while logging in.");
+  // Basic email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    setLoginError("Please enter a valid email address");
+    return;
+  }
+
+  // Password basic validation
+  if (password.length < 8) {
+    setLoginError("Password must be at least 8 characters long");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/backend/authentication/login", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        // Optional: Add any additional headers if needed
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    console.log('Response status:', response.status);
+
+    // Handle non-200 status codes
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
 
-  const handleSignUp = async (event) => {
-    event.preventDefault();
-    const firstName = event.target.firstName.value;
-    const lastName = event.target.lastName.value;
-    const email = event.target.email.value;
-    const password = event.target.password.value;
+    const result = await response.json();
+    console.log('Result:', result);
 
-    try {
-      const response = await fetch("/api/authentication/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        console.log("Sign-up successful:", result.user);
-        setShowSignUpModal(false);
-        setSignupError(null);
-        // Handle successful sign-up
-      } else {
-        setSignupError(result.error || "Sign-up failed");
-      }
-    } catch (error) {
-      console.error("Sign-up error:", error);
-      setSignupError("An error occurred while signing up.");
+    if (result.success) {
+      console.log("Login successful:", result.user);
+      
+      // Store user info in local storage for persistence
+      localStorage.setItem('user', JSON.stringify(result.user));
+      
+      setShowLoginModal(false);
+      setLoginError(null);
+      setIsLoggedIn(true);
+      setIsAdmin(result.user.role === "admin");
+    } else {
+      setLoginError(result.error || "Login failed");
     }
-  };
+  } catch (error) {
+    console.error("Login error:", error);
+    setLoginError(
+      error.message === "Failed to fetch" 
+        ? "Network error. Please check your connection." 
+        : "An unexpected error occurred during login."
+    );
+  }
+};
+
+const handleSignUp = async (event) => {
+  event.preventDefault();
+  const firstName = event.target.firstName.value;
+  const lastName = event.target.lastName.value;
+  const email = event.target.email.value;
+  const password = event.target.password.value;
+
+  // Client-side validation
+  if (!firstName || !lastName || !email || !password) {
+    setSignupError("All fields are required");
+    return;
+  }
+
+  // Basic email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    setSignupError("Please enter a valid email address");
+    return;
+  }
+
+  // Password strength validation
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!passwordRegex.test(password)) {
+    setSignupError(
+      "Password must be at least 8 characters long, " +
+      "include uppercase and lowercase letters, " +
+      "a number, and a special character"
+    );
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/backend/authentication/signup.", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        // Optional: Add any additional headers if needed
+      },
+      body: JSON.stringify({ 
+        firstName, 
+        lastName, 
+        email, 
+        password 
+      }),
+    });
+
+    console.log('Response status:', response.status);
+
+    // Handle non-200 status codes
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('Result:', result);
+
+    if (result.success) {
+      console.log("Sign-up successful:", result.user);
+      
+      // Optional: Automatically log in after successful signup
+      setShowSignUpModal(false);
+      setSignupError(null);
+      
+      // You might want to show a success message or automatically log in
+      alert("Registration successful! You can now log in.");
+    } else {
+      setSignupError(result.error || "Sign-up failed");
+    }
+  } catch (error) {
+    console.error("Sign-up error:", error);
+    setSignupError(
+      error.message === "Failed to fetch" 
+        ? "Network error. Please check your connection." 
+        : "An unexpected error occurred during sign-up."
+    );
+  }
+};
+
 
   const LoginForm = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
