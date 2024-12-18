@@ -18,7 +18,7 @@ const Navbar = () => {
     const password = event.target.password.value;
 
     try {
-      const response = await fetch("http://169.239.251.102:3341/~kelsey.goli/backend/authentication/login.php", {
+      const response = await fetch("/api/authentication/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -48,7 +48,7 @@ const Navbar = () => {
     const password = event.target.password.value;
 
     try {
-      const response = await fetch("http://169.239.251.102:3341/~kelsey.goli/backend/authentication/signup.php", {
+      const response = await fetch("/api/authentication/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password }),
