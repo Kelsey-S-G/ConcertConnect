@@ -5,6 +5,7 @@ import Concerts from "./pages/Concerts";
 import Favorites from "./pages/Favorites";
 import Cart from "./pages/Cart";
 import About from "./pages/About";
+import ConcertContextProvider from "./context/ConcertContextProvider";
 import "./App.css";
 
 const router = createBrowserRouter([
@@ -37,7 +38,11 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <ConcertContextProvider>
+      <RouterProvider router={router} />
+    </ConcertContextProvider>
+  );
 }
 
 export default App;
