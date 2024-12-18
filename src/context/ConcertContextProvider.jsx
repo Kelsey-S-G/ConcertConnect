@@ -7,8 +7,14 @@ const ConcertContextProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [favorites, setFavorites] = useState([]);
 
-  const addToCart = (concert) => {
-    setCart((prevCart) => [...prevCart, concert]);
+  const toggleCart = (concert) => {
+    setCart((prevCart) => {
+      if (prevCart.some((item) => item.id === concert.id)) {
+        return prevCart.filter((item) => item.id !== concert.id);
+      } else {
+        return [...prevCart, concert];
+      }
+    });
   };
 
   const toggleFavorite = (concert) => {
@@ -22,7 +28,7 @@ const ConcertContextProvider = ({ children }) => {
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart }}>
+    <CartContext.Provider value={{ cart, toggleCart }}>
       <FavoritesContext.Provider value={{ favorites, toggleFavorite }}>
         {children}
       </FavoritesContext.Provider>
