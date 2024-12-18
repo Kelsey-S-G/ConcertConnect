@@ -17,16 +17,45 @@ const Concerts = () => {
   useEffect(() => {
     const fetchConcerts = async () => {
       try {
+        setLoading(true);
         const response = await fetch("/api/concerts/get_concerts");
         if (!response.ok) {
           throw new Error("Failed to fetch concert data");
         }
         const data = await response.json();
-        setUpcomingConcerts(data.upcoming);
-        setPastConcerts(data.past);
-        setLoading(false);
+        
+        if (data.status === 'success' && Array.isArray(data.concerts)) {
+          const currentDate = new Date();
+          
+          // Sort concerts into upcoming and past
+          const sorted = data.concerts.reduce((acc, concert) => {
+            // Make sure we have a valid date
+            if (concert.date) {
+              const concertDate = new Date(concert.date);
+              if (concertDate >= currentDate) {
+                acc.upcoming.push(concert);
+              } else {
+                acc.past.push(concert);
+              }
+            }
+            return acc;
+          }, { upcoming: [], past: [] });
+
+          // Sort upcoming concerts by date (earliest first)
+          sorted.upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
+          
+          // Sort past concerts by date (most recent first)
+          sorted.past.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+          setUpcomingConcerts(sorted.upcoming);
+          setPastConcerts(sorted.past);
+        } else {
+          throw new Error("Invalid data format received from server");
+        }
       } catch (err) {
+        console.error("Error fetching concerts:", err);
         setError(err.message);
+      } finally {
         setLoading(false);
       }
     };
@@ -35,6 +64,7 @@ const Concerts = () => {
   }, []);
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return "Date TBD";
     return new Date(dateStr).toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
@@ -43,9 +73,23 @@ const Concerts = () => {
     });
   };
 
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "Time TBD";
+    try {
+      // Add a dummy date to make a valid datetime string
+      const time = new Date(`2000-01-01T${timeStr}`);
+      return time.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (e) {
+      return timeStr; // Fallback to original string if parsing fails
+    }
+  };
+
   const ConcertCard = ({ concert, isPast }) => {
     const [showDetails, setShowDetails] = useState(false);
-
     const isInCart = cart.some((item) => item.id === concert.id);
 
     return (
@@ -54,7 +98,7 @@ const Concerts = () => {
         <CardHeader className="space-y-1 pl-6">
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold uppercase tracking-wider text-blue-800">
-              {concert.genre}
+              {concert.genre || "Genre TBD"}
             </span>
             {!isPast && (
               <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-800 bg-blue-100 rounded-full">
@@ -68,49 +112,55 @@ const Concerts = () => {
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <Calendar className="w-4 h-4 text-blue-800" />
             <span>{formatDate(concert.date)}</span>
-            <MapPin className="w-4 h-4 text-blue-800" />
-            <span>{concert.location}</span>
             <Clock className="w-4 h-4 text-blue-800" />
-            <span>{concert.time}</span>
-            <DollarSign className="w-4 h-4 text-blue-800" />
-            <span>{concert.price}</span>
+            <span>{formatTime(concert.time)}</span>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-gray-700">
               <MapPin className="h-5 w-5 text-blue-800" />
-              <span className="font-medium">{concert.location}</span>
+              <span className="font-medium">{concert.location || "Location TBD"}</span>
             </div>
             <div className="flex items-center gap-3 text-gray-700">
               <DollarSign className="h-5 w-5 text-blue-800" />
-              <span className="font-medium">{concert.price}</span>
+              <span className="font-medium">
+                {typeof concert.price === 'number' 
+                  ? `$${concert.price.toFixed(2)}` 
+                  : concert.price || "Price TBD"}
+              </span>
             </div>
             {!isPast ? (
-              <>
+              <div className="flex space-x-2">
                 <button
                   onClick={() => toggleCart(concert)}
-                  className={`px-4 py-2 rounded-md ${isInCart ? 'bg-red-400 text-white' : 'bg-blue-400 text-white'}`}
+                  className={`px-4 py-2 rounded-md ${
+                    isInCart ? 'bg-red-400 text-white' : 'bg-blue-400 text-white'
+                  }`}
                 >
                   {isInCart ? 'Remove from Cart' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={() => toggleFavorite(concert)}
-                  className="bg-yellow-400 text-white px-4 py-2 rounded-md ml-2"
+                  className="bg-yellow-400 text-white px-4 py-2 rounded-md"
                 >
-                  {favorites.some((fav) => fav.id === concert.id) ? "Unfavorite" : "Favorite"}
+                  {favorites.some((fav) => fav.id === concert.id) 
+                    ? "Unfavorite" 
+                    : "Favorite"}
                 </button>
-              </>
+              </div>
             ) : (
               <>
                 <button
                   onClick={() => setShowDetails(!showDetails)}
                   className="text-primary flex items-center space-x-1"
                 >
-                  <span>View Details</span>
-                  <ChevronRight className="w-4 h-4" />
+                  <span>{showDetails ? 'Hide Details' : 'View Details'}</span>
+                  <ChevronRight className={`w-4 h-4 transform transition-transform ${
+                    showDetails ? 'rotate-90' : ''
+                  }`} />
                 </button>
-                {showDetails && <p>{concert.details}</p>}
+                {showDetails && <p>{concert.details || "No details available"}</p>}
               </>
             )}
           </div>
@@ -123,39 +173,70 @@ const Concerts = () => {
     concert: PropTypes.shape({
       id: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
-      date: PropTypes.string.isRequired,
-      time: PropTypes.string.isRequired,
-      location: PropTypes.string.isRequired,
+      date: PropTypes.string,
+      time: PropTypes.string,
+      location: PropTypes.string,
       details: PropTypes.string,
-      genre: PropTypes.string.isRequired,
-      price: PropTypes.string.isRequired,
+      genre: PropTypes.string,
+      price: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.string
+      ]),
+      status: PropTypes.string
     }).isRequired,
     isPast: PropTypes.bool,
   };
 
-  if (loading) return <p>Loading concerts...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-800"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-4">
+        <p className="text-red-500">Error: {error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <div className="container mx-auto px-4 py-8">
       <Tabs defaultValue="upcoming">
         <TabsList>
           <TabsTrigger value="upcoming" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">
-            Upcoming Concerts
+            Upcoming Concerts ({upcomingConcerts.length})
           </TabsTrigger>
           <TabsTrigger value="past" className="data-[state=active]:bg-blue-800 data-[state=active]:text-white">
-            Past Concerts
+            Past Concerts ({pastConcerts.length})
           </TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming" className="space-y-8">
-          {upcomingConcerts.map((concert) => (
-            <ConcertCard key={concert.id} concert={concert} />
-          ))}
+          {upcomingConcerts.length === 0 ? (
+            <p className="text-center text-gray-500 py-4">No upcoming concerts available</p>
+          ) : (
+            upcomingConcerts.map((concert) => (
+              <ConcertCard key={concert.id} concert={concert} />
+            ))
+          )}
         </TabsContent>
         <TabsContent value="past" className="space-y-8">
-          {pastConcerts.map((concert) => (
-            <ConcertCard key={concert.id} concert={concert} isPast />
-          ))}
+          {pastConcerts.length === 0 ? (
+            <p className="text-center text-gray-500 py-4">No past concerts available</p>
+          ) : (
+            pastConcerts.map((concert) => (
+              <ConcertCard key={concert.id} concert={concert} isPast />
+            ))
+          )}
         </TabsContent>
       </Tabs>
     </div>
@@ -163,4 +244,3 @@ const Concerts = () => {
 };
 
 export default Concerts;
-
