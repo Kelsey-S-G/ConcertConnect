@@ -3,9 +3,9 @@ import PropTypes from "prop-types";
 const Cart = ({ cart }) => {
   return (
     <div>
-      <p>Number of items in cart: {cart.length}</p>
+      <p>Number of items in cart: {cart ? cart.length : 0}</p>
       <ul>
-        {cart.map((concert) => (
+        {cart && cart.map((concert) => (
           <li key={concert.id}>
             {concert.name} - {concert.price}
           </li>
