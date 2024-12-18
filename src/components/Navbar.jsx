@@ -12,6 +12,19 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login status
   const [isAdmin, setIsAdmin] = useState(false); // Track if the logged-in user is an admin
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+    navigate('/');
+  };
+
 const handleLogin = async (event) => {
   event.preventDefault();
   const email = event.target.email.value;
