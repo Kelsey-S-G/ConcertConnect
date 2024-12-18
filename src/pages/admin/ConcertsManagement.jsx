@@ -136,7 +136,7 @@ const ConcertManagement = () => {
         />
       ) : (
         <input
-          status={status}
+          type={type}
           id={name}
           name={name}
           onChange={handleFormChange}
