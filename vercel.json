@@ -1,12 +1,12 @@
 {
   "rewrites": [
       {
-          "source": "/api/authentication/login",
-          "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/authentication/login.php"
+          "source": "/api/auth/login",
+          "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/auth/login.php"
       },
       {
           "source": "/api/authentication/signup",
-          "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/authentication/signup.php"
+          "destination": "http://169.239.251.102:3341/~kelsey.goli/backend/auth/signup.php"
       },
       {
           "source": "/api/concerts/get_concerts",
