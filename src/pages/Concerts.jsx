@@ -99,7 +99,12 @@ const Concerts = () => {
 
   const ConcertCard = ({ concert, isPast }) => {
     const [showDetails, setShowDetails] = useState(false);
-    const isInCart = cart.some((item) => item.id === concert.concert_id);
+    
+    // Fixed id comparison for cart
+    const isInCart = cart.some(item => item.id === concert.id);
+    
+    // Fixed id comparison for favorites
+    const isFavorite = favorites.some(fav => fav.id === concert.id);
 
     return (
       <Card className="group hover:shadow-lg transition-shadow duration-300 relative overflow-hidden">
@@ -135,26 +140,31 @@ const Concerts = () => {
               <DollarSign className="h-5 w-5 text-blue-800" />
               <span className="font-medium">{concert.price || "Price TBD"}</span>
             </div>
-            {!isPast ? (
+            {!isPast && (
               <div className="flex space-x-2">
                 <button
                   onClick={() => toggleCart(concert)}
-                  className={`px-4 py-2 rounded-md ${
-                    isInCart ? 'bg-red-400 text-white' : 'bg-blue-400 text-white'
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    isInCart 
+                      ? 'bg-red-500 hover:bg-red-600 text-white' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
                   }`}
                 >
                   {isInCart ? 'Remove from Cart' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={() => toggleFavorite(concert)}
-                  className="bg-yellow-400 text-white px-4 py-2 rounded-md"
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    isFavorite
+                      ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                      : 'bg-yellow-400 hover:bg-yellow-500 text-white'
+                  }`}
                 >
-                  {favorites.some((fav) => fav.id === concert.concert_id) 
-                    ? "Unfavorite" 
-                    : "Favorite"}
+                  {isFavorite ? 'Unfavorite' : 'Favorite'}
                 </button>
               </div>
-            ) : (
+            )}
+            {isPast && (
               <>
                 <button
                   onClick={() => setShowDetails(!showDetails)}
