@@ -7,7 +7,6 @@ const ConcertManagement = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [concertsForm, setConcertsForm] = useState({
-    id: '',
     name: '',
     date: '',
     time: '',
@@ -23,9 +22,7 @@ const ConcertManagement = () => {
   const fetchConcerts = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/get_concerts`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       if (data.status === 'success') {
         const formattedConcerts = data.concerts.map(concert => ({
@@ -34,8 +31,6 @@ const ConcertManagement = () => {
           time: concert.time ? concert.time.substring(0, 5) : ''
         }));
         setConcerts(formattedConcerts);
-      } else {
-        console.error('Error fetching concerts:', data.message);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -48,17 +43,16 @@ const ConcertManagement = () => {
     fetchConcerts();
   }, [fetchConcerts]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
-    setConcertsForm(prevState => ({
-      ...prevState,
+    setConcertsForm(prev => ({
+      ...prev,
       [name]: value
     }));
-  };
+  }, []);
 
   const handleEdit = useCallback((concert) => {
     const formData = {
-      id: concert.concert_id,
       name: concert.name || '',
       date: concert.date || '',
       time: concert.time ? concert.time.substring(0, 5) : '',
@@ -75,47 +69,52 @@ const ConcertManagement = () => {
   }, []);
 
   const handleDelete = useCallback(async (concertId) => {
+    if (!concertId || typeof concertId !== 'number') {
+      console.error('Invalid concert ID:', concertId);
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to delete this concert?')) {
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${encodeURIComponent(concertId)}`, {
+      const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concertId}`, {
         method: 'DELETE'
       });
 
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const data = await response.json();
 
-      if (response.ok && data.status === 'success') {
-        setConcerts(prevConcerts => 
-          prevConcerts.filter(concert => concert.concert_id !== concertId)
-        );
+      if (data.status === 'success') {
+        setConcerts(prev => prev.filter(concert => concert.concert_id !== concertId));
         alert('Concert deleted successfully');
       } else {
         throw new Error(data.message || 'Error deleting concert');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert(error.message || 'Error deleting concert. Please try again.');
+      alert('Error deleting concert. Please try again.');
     }
   }, []);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-
+    
     try {
       const formData = new FormData();
-
-      // If updating, include the concert_id
-      if (selectedItem) {
-        formData.append('id', selectedItem.concert_id.toString());
+      
+      // Add the ID if we're editing
+      if (selectedItem?.concert_id) {
+        formData.append('id', String(selectedItem.concert_id));
       }
 
-      // Append all form fields
+      // Append form fields, ensuring all values are strings
       Object.entries(concertsForm).forEach(([key, value]) => {
-        if (key !== 'id') { // Skip id as it's handled above
-          formData.append(key, value.toString());
-        }
+        formData.append(key, String(value || ''));
       });
 
       const response = await fetch(`${API_BASE_URL}/add_or_update_concert`, {
@@ -123,42 +122,34 @@ const ConcertManagement = () => {
         body: formData
       });
 
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const data = await response.json();
 
-      if (response.ok && data.status === 'success') {
+      if (data.status === 'success') {
         await fetchConcerts();
         setIsModalOpen(false);
         setSelectedItem(null);
-        resetForm();
-        alert(selectedItem ? 'Concert updated successfully' : 'Concert added successfully');
+        setConcertsForm({
+          name: '',
+          date: '',
+          time: '',
+          location: '',
+          details: '',
+          genre: '',
+          price: '',
+          status: 'upcoming'
+        });
       } else {
         throw new Error(data.message || 'Error submitting form');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert(error.message || 'An error occurred while submitting the form');
+      alert('Error saving concert. Please try again.');
     }
   };
-
-  const resetForm = useCallback(() => {
-    setConcertsForm({
-      id: '',
-      name: '',
-      date: '',
-      time: '',
-      location: '',
-      details: '',
-      genre: '',
-      price: '',
-      status: 'upcoming'
-    });
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedItem(null);
-    resetForm();
-  }, [resetForm]);
 
   const FormInput = ({ label, name, type = 'text', ...props }) => (
     <div className="mb-4">
@@ -170,7 +161,7 @@ const ConcertManagement = () => {
           id={name}
           name={name}
           onChange={handleInputChange}
-          value={concertsForm[name]}
+          value={concertsForm[name] || ''}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           rows="3"
           {...props}
@@ -180,7 +171,7 @@ const ConcertManagement = () => {
           id={name}
           name={name}
           onChange={handleInputChange}
-          value={concertsForm[name]}
+          value={concertsForm[name] || ''}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           {...props}
         >
@@ -193,7 +184,7 @@ const ConcertManagement = () => {
           id={name}
           name={name}
           onChange={handleInputChange}
-          value={concertsForm[name]}
+          value={concertsForm[name] || ''}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           {...props}
         />
@@ -210,8 +201,12 @@ const ConcertManagement = () => {
       ) : (
         <div>
           <button
+            type="button"
             className="bg-blue-600 text-white px-4 py-2 rounded mb-4 hover:bg-blue-700 transition-colors"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setSelectedItem(null);
+              setIsModalOpen(true);
+            }}
           >
             <FaPlus className="inline mr-2" /> Add Concert
           </button>
@@ -240,12 +235,14 @@ const ConcertManagement = () => {
                     <td className="px-4 py-2">{concert.status}</td>
                     <td className="px-4 py-2">
                       <button
+                        type="button"
                         className="text-blue-600 p-1 hover:text-blue-800 mr-2"
                         onClick={() => handleEdit(concert)}
                       >
                         <FaEdit />
                       </button>
                       <button
+                        type="button"
                         className="text-red-600 p-1 hover:text-red-800"
                         onClick={() => handleDelete(concert.concert_id)}
                       >
@@ -268,7 +265,11 @@ const ConcertManagement = () => {
                 {selectedItem ? 'Edit Concert' : 'Add Concert'}
               </h2>
               <button
-                onClick={closeModal}
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setSelectedItem(null);
+                }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <FaTimes className="h-5 w-5" />
@@ -277,49 +278,14 @@ const ConcertManagement = () => {
 
             <div className="p-4 max-h-[70vh] overflow-y-auto">
               <form onSubmit={handleFormSubmit} className="space-y-4">
-                <FormInput
-                  label="Name"
-                  name="name"
-                  required
-                />
-                <FormInput
-                  label="Date"
-                  name="date"
-                  type="date"
-                  required
-                />
-                <FormInput
-                  label="Time"
-                  name="time"
-                  type="time"
-                  required
-                />
-                <FormInput
-                  label="Location"
-                  name="location"
-                  required
-                />
-                <FormInput
-                  label="Details"
-                  name="details"
-                  type="textarea"
-                />
-                <FormInput
-                  label="Genre"
-                  name="genre"
-                  required
-                />
-                <FormInput
-                  label="Price"
-                  name="price"
-                  required
-                />
-                <FormInput
-                  label="Status"
-                  name="status"
-                  type="select"
-                  required
-                />
+                <FormInput label="Name" name="name" required />
+                <FormInput label="Date" name="date" type="date" required />
+                <FormInput label="Time" name="time" type="time" required />
+                <FormInput label="Location" name="location" required />
+                <FormInput label="Details" name="details" type="textarea" />
+                <FormInput label="Genre" name="genre" required />
+                <FormInput label="Price" name="price" required />
+                <FormInput label="Status" name="status" type="select" required />
 
                 <div className="pt-4 border-t">
                   <button
