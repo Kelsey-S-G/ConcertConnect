@@ -64,10 +64,14 @@ const Concerts = () => {
 
     return () => clearInterval(intervalId);
   }, []);
-  
+
   const formatDate = (dateStr) => {
     if (!dateStr) return "Date TBD";
-    return new Date(dateStr).toLocaleDateString("en-US", {
+    // Ensure we're working with a string in YYYY-MM-DD format
+    const [year, month, day] = dateStr.split('-');
+    const date = new Date(year, month - 1, day); // month is 0-based in JS
+    
+    return date.toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",
@@ -76,23 +80,26 @@ const Concerts = () => {
   };
 
   const formatTime = (timeStr) => {
-    if (!timeStr) return "Time TBD";
-    try {
-      // Add a dummy date to make a valid datetime string
-      const time = new Date(`2000-01-01T${timeStr}`);
-      return time.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch (e) {
-      return timeStr; // Fallback to original string if parsing fails
-    }
+    if (!timeStr || timeStr === '00:00:00') return "Time TBD";
+    
+    // Handle MySQL time format (HH:MM:SS)
+    const [hours, minutes] = timeStr.split(':');
+    
+    // Create date object for today with the specified time
+    const date = new Date();
+    date.setHours(parseInt(hours, 10));
+    date.setMinutes(parseInt(minutes, 10));
+    
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   const ConcertCard = ({ concert, isPast }) => {
     const [showDetails, setShowDetails] = useState(false);
-    const isInCart = cart.some((item) => item.id === concert.id);
+    const isInCart = cart.some((item) => item.id === concert.concert_id);
 
     return (
       <Card className="group hover:shadow-lg transition-shadow duration-300 relative overflow-hidden">
@@ -126,11 +133,7 @@ const Concerts = () => {
             </div>
             <div className="flex items-center gap-3 text-gray-700">
               <DollarSign className="h-5 w-5 text-blue-800" />
-              <span className="font-medium">
-                {typeof concert.price === 'number' 
-                  ? `$${concert.price.toFixed(2)}` 
-                  : concert.price || "Price TBD"}
-              </span>
+              <span className="font-medium">{concert.price || "Price TBD"}</span>
             </div>
             {!isPast ? (
               <div className="flex space-x-2">
@@ -146,7 +149,7 @@ const Concerts = () => {
                   onClick={() => toggleFavorite(concert)}
                   className="bg-yellow-400 text-white px-4 py-2 rounded-md"
                 >
-                  {favorites.some((fav) => fav.id === concert.id) 
+                  {favorites.some((fav) => fav.id === concert.concert_id) 
                     ? "Unfavorite" 
                     : "Favorite"}
                 </button>
@@ -173,17 +176,14 @@ const Concerts = () => {
 
   ConcertCard.propTypes = {
     concert: PropTypes.shape({
-      id: PropTypes.number.isRequired,
+      concert_id: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
       date: PropTypes.string,
       time: PropTypes.string,
       location: PropTypes.string,
       details: PropTypes.string,
       genre: PropTypes.string,
-      price: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.string
-      ]),
+      price: PropTypes.string,
       status: PropTypes.string
     }).isRequired,
     isPast: PropTypes.bool,
@@ -227,7 +227,7 @@ const Concerts = () => {
             <p className="text-center text-gray-500 py-4">No upcoming concerts available</p>
           ) : (
             upcomingConcerts.map((concert) => (
-              <ConcertCard key={concert.id} concert={concert} />
+              <ConcertCard key={concert.concert_id} concert={concert} />
             ))
           )}
         </TabsContent>
@@ -236,7 +236,7 @@ const Concerts = () => {
             <p className="text-center text-gray-500 py-4">No past concerts available</p>
           ) : (
             pastConcerts.map((concert) => (
-              <ConcertCard key={concert.id} concert={concert} isPast />
+              <ConcertCard key={concert.concert_id} concert={concert} isPast />
             ))
           )}
         </TabsContent>
