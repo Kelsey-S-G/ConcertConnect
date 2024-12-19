@@ -67,7 +67,7 @@ const handleDelete = useCallback(async (event, concertId) => {
         // Log the URL for debugging
         console.log(`Deleting concert with ID: ${concertId}`);
         
-        const response = await fetch(`${API_BASE_URL}/delete_concerts.php?id=${concertId}`, {
+        const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concertId}`, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
@@ -117,7 +117,7 @@ const handleFormSubmit = async (e) => {
             console.log(pair[0] + ': ' + pair[1]);
         }
 
-        const response = await fetch(`${API_BASE_URL}/add_or_update_concert.php`, {
+        const response = await fetch(`${API_BASE_URL}/add_or_update_concert`, {
             method: 'POST',
             body: formData
         });
