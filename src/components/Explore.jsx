@@ -9,7 +9,7 @@ const Explore = () => {
   useEffect(() => {
     const fetchConcerts = async () => {
       try {
-        const response = await fetch('/api/concerts/get_concerts.php');
+        const response = await fetch("/api/concerts/get_concerts");
         if (!response.ok) {
           throw new Error('Failed to fetch concerts');
         }
