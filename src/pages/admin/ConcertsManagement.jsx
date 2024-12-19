@@ -51,7 +51,7 @@ const ConcertManagement = () => {
     }));
   }, []);
 
-const handleDelete = useCallback(async (event, concertId) => {
+const handleDelete = useCallback(async (event, concert_id) => {
     event.preventDefault(); // Change from stopPropagation to preventDefault
     
     if (!window.confirm('Are you sure you want to delete this concert?')) {
@@ -65,9 +65,9 @@ const handleDelete = useCallback(async (event, concertId) => {
         }
 
         // Log the URL for debugging
-        console.log(`Deleting concert with ID: ${concertId}`);
+        console.log(`Deleting concert with ID: ${concert_id}`);
         
-        const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concertId}`, {
+        const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concert_id}`, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
@@ -84,7 +84,7 @@ const handleDelete = useCallback(async (event, concertId) => {
         const data = await response.json();
 
         if (data.status === 'success') {
-            setConcerts(prev => prev.filter(concert => concert.concert_id !== concertId));
+            setConcerts(prev => prev.filter(concert => concert.concert_id !== concert_id));
             alert('Concert deleted successfully');
         } else {
             throw new Error(data.message || 'Failed to delete concert');
