@@ -25,49 +25,52 @@ const ConcertManagement = () => {
   }, []);
 
   const fetchConcerts = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/get_concerts`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      if (data.status === 'success') {
-        // Format dates and times for display
-        const formattedConcerts = data.concerts.map(concert => ({
-          ...concert,
-          date: concert.date ? concert.date.split(' ')[0] : '', // Extract date part only
-          time: concert.time || ''
-        }));
-        setConcerts(formattedConcerts);
-      } else {
-        console.error('Error fetching concerts:', data.message);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
+  try {
+    const response = await fetch(`${API_BASE_URL}/get_concerts`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+    const data = await response.json();
+    if (data.status === 'success') {
+      // Format dates and times for display
+      const formattedConcerts = data.concerts.map(concert => ({
+        ...concert,
+        // Format date from MySQL date format (YYYY-MM-DD)
+        date: concert.date ? new Date(concert.date).toISOString().split('T')[0] : '',
+        // Format time from MySQL time format (HH:MM:SS)
+        time: concert.time ? concert.time.substring(0, 5) : '' // Take only HH:MM part
+      }));
+      setConcerts(formattedConcerts);
+    } else {
+      console.error('Error fetching concerts:', data.message);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleEdit = (concert) => {
-    // Format the date and time for the form inputs
-    const formData = {
-      id: concert.concert_id,
-      name: concert.name || '',
-      date: concert.date || '',
-      time: concert.time || '',
-      location: concert.location || '',
-      details: concert.details || '',
-      genre: concert.genre || '',
-      price: concert.price || '',
-      status: concert.status || 'upcoming'
-    };
-    
-    setSelectedItem(concert);
-    setConcertsForm(formData);
-    setIsModalOpen(true);
+  const formData = {
+    id: concert.concert_id,
+    name: concert.name || '',
+    // Ensure date is in YYYY-MM-DD format
+    date: new Date(concert.date).toISOString().split('T')[0],
+    // Ensure time is in HH:MM format
+    time: concert.time ? concert.time.substring(0, 5) : '',
+    location: concert.location || '',
+    details: concert.details || '',
+    genre: concert.genre || '',
+    price: concert.price || '',
+    status: concert.status || 'upcoming'
   };
-
+  
+  setSelectedItem(concert);
+  setConcertsForm(formData);
+  setIsModalOpen(true);
+};
+  
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this concert?')) {
       return;
@@ -111,66 +114,78 @@ const ConcertManagement = () => {
   };
 
   const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData();
-    
-    if (selectedItem) {
-      formData.append('id', selectedItem.concert_id.toString());
+  e.preventDefault();
+  
+  const formData = new FormData();
+  
+  // If updating, include the concert_id
+  if (selectedItem) {
+    formData.append('id', selectedItem.concert_id.toString());
+  }
+  
+  // Format the date and time before sending
+  Object.entries(concertsForm).forEach(([key, value]) => {
+    if (key === 'date') {
+      // Ensure date is in YYYY-MM-DD format
+      formData.append(key, new Date(value).toISOString().split('T')[0]);
+    } else if (key === 'time') {
+      // Ensure time is in HH:MM format
+      formData.append(key, value + ':00'); // Add seconds for MySQL time format
+    } else if (key !== 'id' || !selectedItem) {
+      formData.append(key, value.toString());
     }
-    
-    Object.entries(concertsForm).forEach(([key, value]) => {
-      if (key !== 'id' || !selectedItem) {
-        formData.append(key, value.toString());
-      }
+  });
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/add_or_update_concert`, {
+      method: 'POST',
+      body: formData
     });
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/add_or_update_concert`, {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.status === 'success') {
-        if (selectedItem) {
-          // Update the concerts state with the new data
-          setConcerts(prevConcerts => 
-            prevConcerts.map(concert => 
-              concert.concert_id === selectedItem.concert_id
-                ? {
-                    ...concert,
-                    ...concertsForm,
-                    concert_id: selectedItem.concert_id,
-                    date: concertsForm.date,
-                    time: concertsForm.time
-                  }
-                : concert
-            )
-          );
-        } else {
-          // Add new concert
-          const newConcert = {
-            ...concertsForm,
-            concert_id: data.id
-          };
-          setConcerts(prevConcerts => [...prevConcerts, newConcert]);
-        }
-        closeModal();
-        fetchConcerts(); // Refresh the list to ensure synchronized data
-      } else {
-        alert('Error: ' + data.message);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('An error occurred while submitting the concert.');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+
+    if (data.status === 'success') {
+      if (selectedItem) {
+        // Update the existing concert
+        setConcerts(prevConcerts => 
+          prevConcerts.map(concert => 
+            concert.concert_id === selectedItem.concert_id
+              ? {
+                  ...concert,
+                  ...concertsForm,
+                  concert_id: selectedItem.concert_id,
+                  // Ensure formatted date and time are used
+                  date: new Date(concertsForm.date).toISOString().split('T')[0],
+                  time: concertsForm.time + ':00'
+                }
+              : concert
+          )
+        );
+      } else {
+        // Add new concert
+        const newConcert = {
+          ...concertsForm,
+          concert_id: data.id,
+          // Ensure formatted date and time are used
+          date: new Date(concertsForm.date).toISOString().split('T')[0],
+          time: concertsForm.time + ':00'
+        };
+        setConcerts(prevConcerts => [...prevConcerts, newConcert]);
+      }
+      closeModal();
+      fetchConcerts(); // Refresh the list to ensure synchronized data
+    } else {
+      alert('Error: ' + data.message);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('An error occurred while submitting the concert.');
+  }
+};
 
   const closeModal = () => {
     setIsModalOpen(false);
