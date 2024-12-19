@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaEdit, FaTrash, FaPlus, FaTimes } from 'react-icons/fa';
 
 const ConcertManagement = () => {
@@ -20,11 +20,7 @@ const ConcertManagement = () => {
 
   const API_BASE_URL = '/api/concerts';
 
-  useEffect(() => {
-    fetchConcerts();
-  }, []);
-
-  const fetchConcerts = async () => {
+  const fetchConcerts = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/get_concerts`);
       if (!response.ok) {
@@ -46,9 +42,12 @@ const ConcertManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Fixed input handling
+  useEffect(() => {
+    fetchConcerts();
+  }, [fetchConcerts]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setConcertsForm(prevState => ({
@@ -57,9 +56,9 @@ const ConcertManagement = () => {
     }));
   };
 
-  const handleEdit = (concert) => {
+  const handleEdit = useCallback((concert) => {
     const formData = {
-      id: concert.concert_id.toString(),  // Ensure ID is a string
+      id: concert.concert_id,
       name: concert.name || '',
       date: concert.date || '',
       time: concert.time ? concert.time.substring(0, 5) : '',
@@ -73,16 +72,15 @@ const ConcertManagement = () => {
     setSelectedItem(concert);
     setConcertsForm(formData);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  // Fixed delete handler
-  const handleDelete = async (concertId) => {
+  const handleDelete = useCallback(async (concertId) => {
     if (!window.confirm('Are you sure you want to delete this concert?')) {
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concertId}`, {
+      const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${encodeURIComponent(concertId)}`, {
         method: 'DELETE'
       });
 
@@ -100,24 +98,23 @@ const ConcertManagement = () => {
       console.error('Error:', error);
       alert(error.message || 'Error deleting concert. Please try again.');
     }
-  };
+  }, []);
 
-  // Fixed form submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       const formData = new FormData();
-      
+
       // If updating, include the concert_id
       if (selectedItem) {
         formData.append('id', selectedItem.concert_id.toString());
       }
-      
+
       // Append all form fields
       Object.entries(concertsForm).forEach(([key, value]) => {
         if (key !== 'id') { // Skip id as it's handled above
-          formData.append(key, value);
+          formData.append(key, value.toString());
         }
       });
 
@@ -143,7 +140,7 @@ const ConcertManagement = () => {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setConcertsForm({
       id: '',
       name: '',
@@ -155,15 +152,14 @@ const ConcertManagement = () => {
       price: '',
       status: 'upcoming'
     });
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedItem(null);
     resetForm();
-  };
+  }, [resetForm]);
 
-  // Modified FormInput component
   const FormInput = ({ label, name, type = 'text', ...props }) => (
     <div className="mb-4">
       <label htmlFor={name} className="block text-gray-700 text-sm font-medium mb-1">
@@ -208,7 +204,7 @@ const ConcertManagement = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Concert Management</h1>
-      
+
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -219,7 +215,7 @@ const ConcertManagement = () => {
           >
             <FaPlus className="inline mr-2" /> Add Concert
           </button>
-          
+
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border">
               <thead className="bg-gray-50">
@@ -278,53 +274,53 @@ const ConcertManagement = () => {
                 <FaTimes className="h-5 w-5" />
               </button>
             </div>
-            
+
             <div className="p-4 max-h-[70vh] overflow-y-auto">
               <form onSubmit={handleFormSubmit} className="space-y-4">
-                <FormInput 
+                <FormInput
                   label="Name"
                   name="name"
                   required
                 />
-                <FormInput 
+                <FormInput
                   label="Date"
                   name="date"
                   type="date"
                   required
                 />
-                <FormInput 
+                <FormInput
                   label="Time"
                   name="time"
                   type="time"
                   required
                 />
-                <FormInput 
+                <FormInput
                   label="Location"
                   name="location"
                   required
                 />
-                <FormInput 
+                <FormInput
                   label="Details"
                   name="details"
                   type="textarea"
                 />
-                <FormInput 
+                <FormInput
                   label="Genre"
                   name="genre"
                   required
                 />
-                <FormInput 
+                <FormInput
                   label="Price"
                   name="price"
                   required
                 />
-                <FormInput 
+                <FormInput
                   label="Status"
                   name="status"
                   type="select"
                   required
                 />
-                
+
                 <div className="pt-4 border-t">
                   <button
                     type="submit"
