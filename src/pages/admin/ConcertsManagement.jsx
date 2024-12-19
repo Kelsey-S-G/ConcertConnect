@@ -60,7 +60,7 @@ const handleDelete = useCallback(async (event, concert_id) => {
 
     try {
         // Add error checking for concertId
-        if (!concertId) {
+        if (!concert_id) {
             throw new Error('Invalid concert ID');
         }
 
