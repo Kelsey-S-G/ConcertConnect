@@ -48,20 +48,20 @@ const ConcertManagement = () => {
     }
   };
 
-  // Fixed handleFormChange function
-  const handleFormChange = (e) => {
+  // Fixed input handling
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setConcertsForm(prevForm => ({
-      ...prevForm,
+    setConcertsForm(prevState => ({
+      ...prevState,
       [name]: value
     }));
   };
 
   const handleEdit = (concert) => {
     const formData = {
-      id: concert.concert_id,
+      id: concert.concert_id.toString(),  // Ensure ID is a string
       name: concert.name || '',
-      date: concert.date ? new Date(concert.date).toISOString().split('T')[0] : '',
+      date: concert.date || '',
       time: concert.time ? concert.time.substring(0, 5) : '',
       location: concert.location || '',
       details: concert.details || '',
@@ -75,25 +75,22 @@ const ConcertManagement = () => {
     setIsModalOpen(true);
   };
 
-  // Fixed handleDelete function
-  const handleDelete = async (id) => {
+  // Fixed delete handler
+  const handleDelete = async (concertId) => {
     if (!window.confirm('Are you sure you want to delete this concert?')) {
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concertId}`, {
+        method: 'DELETE'
       });
 
       const data = await response.json();
 
       if (response.ok && data.status === 'success') {
         setConcerts(prevConcerts => 
-          prevConcerts.filter(concert => concert.concert_id !== id)
+          prevConcerts.filter(concert => concert.concert_id !== concertId)
         );
         alert('Concert deleted successfully');
       } else {
@@ -105,27 +102,25 @@ const ConcertManagement = () => {
     }
   };
 
-  // Fixed handleFormSubmit function
+  // Fixed form submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     
-    const formData = new FormData();
-    
-    if (selectedItem) {
-      formData.append('id', selectedItem.concert_id.toString());
-    }
-    
-    Object.entries(concertsForm).forEach(([key, value]) => {
-      if (key === 'date') {
-        formData.append(key, value); // Already in YYYY-MM-DD format
-      } else if (key === 'time') {
-        formData.append(key, value + ':00');
-      } else if (key !== 'id' || !selectedItem) {
-        formData.append(key, value.toString());
-      }
-    });
-
     try {
+      const formData = new FormData();
+      
+      // If updating, include the concert_id
+      if (selectedItem) {
+        formData.append('id', selectedItem.concert_id.toString());
+      }
+      
+      // Append all form fields
+      Object.entries(concertsForm).forEach(([key, value]) => {
+        if (key !== 'id') { // Skip id as it's handled above
+          formData.append(key, value);
+        }
+      });
+
       const response = await fetch(`${API_BASE_URL}/add_or_update_concert`, {
         method: 'POST',
         body: formData
@@ -134,21 +129,21 @@ const ConcertManagement = () => {
       const data = await response.json();
 
       if (response.ok && data.status === 'success') {
-        await fetchConcerts(); // Refresh the list
-        closeModal();
+        await fetchConcerts();
+        setIsModalOpen(false);
+        setSelectedItem(null);
+        resetForm();
         alert(selectedItem ? 'Concert updated successfully' : 'Concert added successfully');
       } else {
-        throw new Error(data.message || 'Error submitting concert');
+        throw new Error(data.message || 'Error submitting form');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert(error.message || 'An error occurred while submitting the concert.');
+      alert(error.message || 'An error occurred while submitting the form');
     }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedItem(null);
+  const resetForm = () => {
     setConcertsForm({
       id: '',
       name: '',
@@ -162,7 +157,13 @@ const ConcertManagement = () => {
     });
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedItem(null);
+    resetForm();
+  };
 
+  // Modified FormInput component
   const FormInput = ({ label, name, type = 'text', ...props }) => (
     <div className="mb-4">
       <label htmlFor={name} className="block text-gray-700 text-sm font-medium mb-1">
@@ -172,7 +173,7 @@ const ConcertManagement = () => {
         <textarea
           id={name}
           name={name}
-          onChange={handleFormChange}
+          onChange={handleInputChange}
           value={concertsForm[name]}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           rows="3"
@@ -182,7 +183,7 @@ const ConcertManagement = () => {
         <select
           id={name}
           name={name}
-          onChange={handleFormChange}
+          onChange={handleInputChange}
           value={concertsForm[name]}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           {...props}
@@ -195,7 +196,7 @@ const ConcertManagement = () => {
           type={type}
           id={name}
           name={name}
-          onChange={handleFormChange}
+          onChange={handleInputChange}
           value={concertsForm[name]}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           {...props}
@@ -249,11 +250,11 @@ const ConcertManagement = () => {
                         <FaEdit />
                       </button>
                       <button
-                          className="text-red-600 p-1 hover:text-red-800"
-                          onClick={() => handleDelete(concert.concert_id)}
-                        >
-                      <FaTrash />
-                    </button>
+                        className="text-red-600 p-1 hover:text-red-800"
+                        onClick={() => handleDelete(concert.concert_id)}
+                      >
+                        <FaTrash />
+                      </button>
                     </td>
                   </tr>
                 ))}
