@@ -40,7 +40,11 @@ const ConcertManagement = () => {
 
   const handleEdit = (concert) => {
     setSelectedItem(concert);
-    setConcertsForm(concert);
+    // Make sure to include the concert_id in the form data
+    setConcertsForm({
+      ...concert,
+      id: concert.concert_id // Ensure we're using the correct ID field
+    });
     setIsModalOpen(true);
   };
 
@@ -51,7 +55,7 @@ const ConcertManagement = () => {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        setConcerts(concerts.filter(concert => concert.id !== id));
+        setConcerts(concerts.filter(concert => concert.concert_id !== id));
       } else {
         console.error('Error deleting concert:', data.message);
       }
@@ -66,41 +70,56 @@ const ConcertManagement = () => {
   };
 
   const handleFormSubmit = async (e) => {
-  e.preventDefault();
-  
-  const formData = new FormData();
-  Object.keys(concertsForm).forEach(key => {
-    formData.append(key, concertsForm[key] || '');
-  });
-
-  try {
-    const response = await fetch('/api/concerts/add_or_update_concert', {
-      method: 'POST',
-      body: formData,
-    });
-    const data = await response.json();
-
-    if (data.status === 'success') {
-      if (selectedItem) {
-        // Update the existing concert
-        setConcerts(concerts.map(concert => 
-          concert.concert_id === selectedItem.concert_id
-            ? { ...concert, ...concertsForm } // Only update the matching concert
-            : concert
-        ));
-      } else {
-        // Add a new concert
-        setConcerts([...concerts, { ...concertsForm, concert_id: data.id }]);
-      }
-      closeModal();
-    } else {
-      alert('Error: ' + data.message);
+    e.preventDefault();
+    
+    const formData = new FormData();
+    // If we're updating, make sure to include the correct ID
+    if (selectedItem) {
+      formData.append('id', selectedItem.concert_id);
     }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('An error occurred while submitting the concert.');
-  }
-};
+    
+    // Append all other form fields
+    Object.keys(concertsForm).forEach(key => {
+      if (key !== 'id') { // Skip the id field as we handled it above
+        formData.append(key, concertsForm[key] || '');
+      }
+    });
+
+    try {
+      const response = await fetch('/api/concerts/add_or_update_concert', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        if (selectedItem) {
+          // Update the existing concert
+          setConcerts(concerts.map(concert => 
+            concert.concert_id === selectedItem.concert_id
+              ? { 
+                  ...concert,
+                  ...concertsForm,
+                  concert_id: selectedItem.concert_id // Preserve the correct ID
+                }
+              : concert
+          ));
+        } else {
+          // Add the new concert with the returned ID
+          setConcerts([...concerts, { 
+            ...concertsForm,
+            concert_id: data.id // Use the ID returned from the server
+          }]);
+        }
+        closeModal();
+      } else {
+        alert('Error: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while submitting the concert.');
+    }
+  };
 
   const closeModal = () => {
     setIsModalOpen(false);
