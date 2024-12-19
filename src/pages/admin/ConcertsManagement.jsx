@@ -68,24 +68,20 @@ const ConcertManagement = () => {
     setIsModalOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (concertId) => {
-    if (!concertId || typeof concertId !== 'number') {
-      console.error('Invalid concert ID:', concertId);
-      return;
-    }
-
+  const handleDelete = useCallback(async (event, concertId) => {
+    event.stopPropagation(); // Prevent event bubbling
+    
     if (!window.confirm('Are you sure you want to delete this concert?')) {
       return;
     }
 
     try {
       const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concertId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
 
       const data = await response.json();
 
@@ -93,10 +89,10 @@ const ConcertManagement = () => {
         setConcerts(prev => prev.filter(concert => concert.concert_id !== concertId));
         alert('Concert deleted successfully');
       } else {
-        throw new Error(data.message || 'Error deleting concert');
+        throw new Error(data.message || 'Failed to delete concert');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Delete error:', error);
       alert('Error deleting concert. Please try again.');
     }
   }, []);
@@ -122,14 +118,29 @@ const ConcertManagement = () => {
         body: formData
       });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
       const data = await response.json();
 
       if (data.status === 'success') {
-        await fetchConcerts();
+        // Instead of fetching all concerts again, update the state directly
+        if (selectedItem) {
+          setConcerts(prev => prev.map(concert => 
+            concert.concert_id === selectedItem.concert_id
+              ? {
+                  ...concert,
+                  ...concertsForm,
+                  concert_id: selectedItem.concert_id
+                }
+              : concert
+          ));
+        } else {
+          // For new concerts, append to the list
+          const newConcert = {
+            ...concertsForm,
+            concert_id: data.id // Assuming the API returns the new ID
+          };
+          setConcerts(prev => [...prev, newConcert]);
+        }
+
         setIsModalOpen(false);
         setSelectedItem(null);
         setConcertsForm({
@@ -142,11 +153,13 @@ const ConcertManagement = () => {
           price: '',
           status: 'upcoming'
         });
+        
+        alert(selectedItem ? 'Concert updated successfully' : 'Concert added successfully');
       } else {
         throw new Error(data.message || 'Error submitting form');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Form submission error:', error);
       alert('Error saving concert. Please try again.');
     }
   };
@@ -244,7 +257,7 @@ const ConcertManagement = () => {
                       <button
                         type="button"
                         className="text-red-600 p-1 hover:text-red-800"
-                        onClick={() => handleDelete(concert.concert_id)}
+                        onClick={(e) => handleDelete(e, concert.concert_id)}
                       >
                         <FaTrash />
                       </button>
