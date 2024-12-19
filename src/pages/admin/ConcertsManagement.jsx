@@ -51,40 +51,34 @@ const ConcertManagement = () => {
     }));
   }, []);
 
-  const handleEdit = useCallback((concert) => {
-    const formData = {
-      name: concert.name || '',
-      date: concert.date || '',
-      time: concert.time ? concert.time.substring(0, 5) : '',
-      location: concert.location || '',
-      details: concert.details || '',
-      genre: concert.genre || '',
-      price: concert.price || '',
-      status: concert.status || 'upcoming'
-    };
-    
-    setSelectedItem(concert);
-    setConcertsForm(formData);
-    setIsModalOpen(true);
-  }, []);
-
 const handleDelete = useCallback(async (event, concertId) => {
-    event.stopPropagation();
+    event.preventDefault(); // Change from stopPropagation to preventDefault
     
     if (!window.confirm('Are you sure you want to delete this concert?')) {
         return;
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concertId}`, {
+        // Add error checking for concertId
+        if (!concertId) {
+            throw new Error('Invalid concert ID');
+        }
+
+        // Log the URL for debugging
+        console.log(`Deleting concert with ID: ${concertId}`);
+        
+        const response = await fetch(`${API_BASE_URL}/delete_concerts.php?id=${concertId}`, {
             method: 'DELETE',
             headers: {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Server response:', errorText);
+            throw new Error(`Server error: ${response.status}`);
         }
 
         const data = await response.json();
@@ -107,40 +101,52 @@ const handleFormSubmit = async (e) => {
     try {
         const formData = new FormData();
         
-        // Add the ID if we're editing
-        if (selectedItem?.concert_id) {
-            formData.append('id', String(selectedItem.concert_id));
+        // Ensure we're properly handling the ID for updates
+        if (selectedItem && selectedItem.concert_id) {
+            formData.append('id', selectedItem.concert_id.toString());
+            console.log('Updating concert with ID:', selectedItem.concert_id);
         }
 
-        // Append form fields, ensuring all values are strings
+        // Append form fields
         Object.entries(concertsForm).forEach(([key, value]) => {
             formData.append(key, String(value || ''));
         });
 
-        const response = await fetch(`${API_BASE_URL}/add_or_update_concert`, {
+        // Log formData contents for debugging
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+
+        const response = await fetch(`${API_BASE_URL}/add_or_update_concert.php`, {
             method: 'POST',
             body: formData
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Server response:', errorText);
+            throw new Error(`Server error: ${response.status}`);
         }
 
         const data = await response.json();
 
         if (data.status === 'success') {
-            // For existing concert
-            if (selectedItem) {
+            if (selectedItem && selectedItem.concert_id) {
+                // Update existing concert
                 setConcerts(prev => prev.map(concert => 
                     concert.concert_id === selectedItem.concert_id
-                        ? { ...concert, ...concertsForm, concert_id: selectedItem.concert_id }
+                        ? {
+                            ...concert,
+                            ...concertsForm,
+                            concert_id: selectedItem.concert_id
+                          }
                         : concert
                 ));
             } else {
-                // For new concert
+                // Add new concert
                 const newConcert = {
                     ...concertsForm,
-                    concert_id: data.id // Make sure your API returns the new ID
+                    concert_id: data.id
                 };
                 setConcerts(prev => [...prev, newConcert]);
             }
@@ -168,6 +174,28 @@ const handleFormSubmit = async (e) => {
     }
 };
 
+// Add this function to properly set up the edit form
+const handleEdit = useCallback((concert) => {
+    // Make sure we're getting all the data from the concert
+    console.log('Editing concert:', concert);
+    
+    const formData = {
+        name: concert.name || '',
+        date: concert.date || '',
+        time: concert.time || '',
+        location: concert.location || '',
+        details: concert.details || '',
+        genre: concert.genre || '',
+        price: concert.price || '',
+        status: concert.status || 'upcoming'
+    };
+    
+    // Make sure we're storing the full concert object
+    setSelectedItem(concert);
+    setConcertsForm(formData);
+    setIsModalOpen(true);
+}, []);
+  
   const FormInput = ({ label, name, type = 'text', ...props }) => (
     <div className="mb-4">
       <label htmlFor={name} className="block text-gray-700 text-sm font-medium mb-1">
