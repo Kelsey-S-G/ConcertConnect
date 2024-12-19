@@ -18,100 +18,136 @@ const ConcertManagement = () => {
     status: 'upcoming'
   });
 
+  // Update the API base URL to match your actual API path
+  const API_BASE_URL = '/api/concerts'; // Adjust this to match your actual API base URL
+
   useEffect(() => {
     fetchConcerts();
   }, []);
 
   const fetchConcerts = async () => {
     try {
-      const response = await fetch("/api/concerts/get_concerts");
+      const response = await fetch(`${API_BASE_URL}/get_concerts`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       if (data.status === 'success') {
         setConcerts(data.concerts);
       } else {
         console.error('Error fetching concerts:', data.message);
       }
-      setLoading(false);
     } catch (error) {
       console.error('Error:', error);
+    } finally {
       setLoading(false);
     }
   };
 
   const handleEdit = (concert) => {
+    const formData = {
+      id: concert.concert_id,
+      name: concert.name,
+      date: concert.date,
+      time: concert.time,
+      location: concert.location,
+      details: concert.details || '',
+      genre: concert.genre,
+      price: concert.price,
+      status: concert.status
+    };
+    
     setSelectedItem(concert);
-    // Make sure to include the concert_id in the form data
-    setConcertsForm({
-      ...concert,
-      id: concert.concert_id // Ensure we're using the correct ID field
-    });
+    setConcertsForm(formData);
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this concert?')) {
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/concerts/delete_concerts?id=${id}`, {
+      const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${id}`, {
         method: 'DELETE',
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       if (data.status === 'success') {
         setConcerts(concerts.filter(concert => concert.concert_id !== id));
       } else {
-        console.error('Error deleting concert:', data.message);
+        alert('Error deleting concert: ' + data.message);
       }
     } catch (error) {
       console.error('Error:', error);
+      alert('Error deleting concert. Please try again.');
     }
   };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setConcertsForm({ ...concertsForm, [name]: value });
+    setConcertsForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     
+    // Create FormData object
     const formData = new FormData();
-    // If we're updating, make sure to include the correct ID
+    
+    // If updating, include the concert_id
     if (selectedItem) {
-      formData.append('id', selectedItem.concert_id);
+      formData.append('id', selectedItem.concert_id.toString());
     }
     
-    // Append all other form fields
-    Object.keys(concertsForm).forEach(key => {
-      if (key !== 'id') { // Skip the id field as we handled it above
-        formData.append(key, concertsForm[key] || '');
+    // Append all form fields
+    Object.entries(concertsForm).forEach(([key, value]) => {
+      if (key !== 'id' || !selectedItem) { // Skip id if updating
+        formData.append(key, value.toString());
       }
     });
 
     try {
-      const response = await fetch('/api/concerts/add_or_update_concert', {
+      const response = await fetch(`${API_BASE_URL}/add_or_update_concert`, {
         method: 'POST',
-        body: formData,
+        body: formData
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.status === 'success') {
         if (selectedItem) {
-          // Update the existing concert
-          setConcerts(concerts.map(concert => 
-            concert.concert_id === selectedItem.concert_id
-              ? { 
-                  ...concert,
-                  ...concertsForm,
-                  concert_id: selectedItem.concert_id // Preserve the correct ID
-                }
-              : concert
-          ));
+          // Update existing concert
+          setConcerts(prevConcerts => 
+            prevConcerts.map(concert => 
+              concert.concert_id === selectedItem.concert_id
+                ? {
+                    ...concert,
+                    ...concertsForm,
+                    concert_id: selectedItem.concert_id
+                  }
+                : concert
+            )
+          );
         } else {
-          // Add the new concert with the returned ID
-          setConcerts([...concerts, { 
+          // Add new concert
+          const newConcert = {
             ...concertsForm,
-            concert_id: data.id // Use the ID returned from the server
-          }]);
+            concert_id: data.id
+          };
+          setConcerts(prevConcerts => [...prevConcerts, newConcert]);
         }
         closeModal();
+        fetchConcerts(); // Refresh the list after update
       } else {
         alert('Error: ' + data.message);
       }
@@ -147,16 +183,30 @@ const ConcertManagement = () => {
           id={name}
           name={name}
           onChange={handleFormChange}
+          value={concertsForm[name]}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           rows="3"
           {...props}
         />
+      ) : type === 'select' ? (
+        <select
+          id={name}
+          name={name}
+          onChange={handleFormChange}
+          value={concertsForm[name]}
+          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+          {...props}
+        >
+          <option value="upcoming">Upcoming</option>
+          <option value="past">Past</option>
+        </select>
       ) : (
         <input
           type={type}
           id={name}
           name={name}
           onChange={handleFormChange}
+          value={concertsForm[name]}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           {...props}
         />
@@ -192,7 +242,7 @@ const ConcertManagement = () => {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {concerts.map(concert => (
-                  <tr key={concert.id}>
+                  <tr key={concert.concert_id}>
                     <td className="px-4 py-2">{concert.name}</td>
                     <td className="px-4 py-2">{concert.date}</td>
                     <td className="px-4 py-2">{concert.time}</td>
@@ -210,7 +260,7 @@ const ConcertManagement = () => {
                       </button>
                       <button
                         className="text-red-600 p-1 hover:text-red-800"
-                        onClick={() => handleDelete(concert.id)}
+                        onClick={() => handleDelete(concert.concert_id)}
                       >
                         <FaTrash />
                       </button>
@@ -243,52 +293,44 @@ const ConcertManagement = () => {
                 <FormInput 
                   label="Name"
                   name="name"
-                  value={concertsForm.name}
                   required
                 />
                 <FormInput 
                   label="Date"
                   name="date"
                   type="date"
-                  value={concertsForm.date}
                   required
                 />
                 <FormInput 
                   label="Time"
                   name="time"
                   type="time"
-                  value={concertsForm.time}
                   required
                 />
                 <FormInput 
                   label="Location"
                   name="location"
-                  value={concertsForm.location}
                   required
                 />
                 <FormInput 
                   label="Details"
                   name="details"
                   type="textarea"
-                  value={concertsForm.details}
-                  required
                 />
                 <FormInput 
                   label="Genre"
                   name="genre"
-                  value={concertsForm.genre}
                   required
                 />
                 <FormInput 
                   label="Price"
                   name="price"
-                  value={concertsForm.price}
                   required
                 />
                 <FormInput 
                   label="Status"
                   name="status"
-                  value={concertsForm.status}
+                  type="select"
                   required
                 />
                 
