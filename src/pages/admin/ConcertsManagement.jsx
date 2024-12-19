@@ -74,15 +74,25 @@ const ConcertManagement = () => {
     }
 
     try {
+      // Ensure the ID is being passed correctly
       const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${id}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
       const data = await response.json();
+
       if (data.status === 'success') {
-        setConcerts(concerts.filter(concert => concert.concert_id !== id));
+        // Update the UI to remove the deleted concert
+        setConcerts(currentConcerts => 
+          currentConcerts.filter(concert => concert.concert_id.toString() !== id.toString())
+        );
       } else {
         alert('Error deleting concert: ' + data.message);
       }
@@ -90,7 +100,7 @@ const ConcertManagement = () => {
       console.error('Error:', error);
       alert('Error deleting concert. Please try again.');
     }
-  };
+};
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -264,11 +274,11 @@ const ConcertManagement = () => {
                         <FaEdit />
                       </button>
                       <button
-                        className="text-red-600 p-1 hover:text-red-800"
-                        onClick={() => handleDelete(concert.concert_id)}
-                      >
-                        <FaTrash />
-                      </button>
+                          className="text-red-600 p-1 hover:text-red-800"
+                          onClick={() => handleDelete(concert.concert_id)}
+                        >
+                      <FaTrash />
+                    </button>
                     </td>
                   </tr>
                 ))}
