@@ -68,101 +68,105 @@ const ConcertManagement = () => {
     setIsModalOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (event, concertId) => {
-    event.stopPropagation(); // Prevent event bubbling
+const handleDelete = useCallback(async (event, concertId) => {
+    event.stopPropagation();
     
     if (!window.confirm('Are you sure you want to delete this concert?')) {
-      return;
+        return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concertId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
+        const response = await fetch(`${API_BASE_URL}/delete_concerts?id=${concertId}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-      });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.status === 'success') {
-        setConcerts(prev => prev.filter(concert => concert.concert_id !== concertId));
-        alert('Concert deleted successfully');
-      } else {
-        throw new Error(data.message || 'Failed to delete concert');
-      }
+        if (data.status === 'success') {
+            setConcerts(prev => prev.filter(concert => concert.concert_id !== concertId));
+            alert('Concert deleted successfully');
+        } else {
+            throw new Error(data.message || 'Failed to delete concert');
+        }
     } catch (error) {
-      console.error('Delete error:', error);
-      alert('Error deleting concert. Please try again.');
+        console.error('Delete error:', error);
+        alert(`Error deleting concert: ${error.message}`);
     }
-  }, []);
+}, []);
 
-  const handleFormSubmit = async (e) => {
+const handleFormSubmit = async (e) => {
     e.preventDefault();
     
     try {
-      const formData = new FormData();
-      
-      // Add the ID if we're editing
-      if (selectedItem?.concert_id) {
-        formData.append('id', String(selectedItem.concert_id));
-      }
-
-      // Append form fields, ensuring all values are strings
-      Object.entries(concertsForm).forEach(([key, value]) => {
-        formData.append(key, String(value || ''));
-      });
-
-      const response = await fetch(`${API_BASE_URL}/add_or_update_concert`, {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await response.json();
-
-      if (data.status === 'success') {
-        // Instead of fetching all concerts again, update the state directly
-        if (selectedItem) {
-          setConcerts(prev => prev.map(concert => 
-            concert.concert_id === selectedItem.concert_id
-              ? {
-                  ...concert,
-                  ...concertsForm,
-                  concert_id: selectedItem.concert_id
-                }
-              : concert
-          ));
-        } else {
-          // For new concerts, append to the list
-          const newConcert = {
-            ...concertsForm,
-            concert_id: data.id // Assuming the API returns the new ID
-          };
-          setConcerts(prev => [...prev, newConcert]);
+        const formData = new FormData();
+        
+        // Add the ID if we're editing
+        if (selectedItem?.concert_id) {
+            formData.append('id', String(selectedItem.concert_id));
         }
 
-        setIsModalOpen(false);
-        setSelectedItem(null);
-        setConcertsForm({
-          name: '',
-          date: '',
-          time: '',
-          location: '',
-          details: '',
-          genre: '',
-          price: '',
-          status: 'upcoming'
+        // Append form fields, ensuring all values are strings
+        Object.entries(concertsForm).forEach(([key, value]) => {
+            formData.append(key, String(value || ''));
         });
-        
-        alert(selectedItem ? 'Concert updated successfully' : 'Concert added successfully');
-      } else {
-        throw new Error(data.message || 'Error submitting form');
-      }
+
+        const response = await fetch(`${API_BASE_URL}/add_or_update_concert`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            // For existing concert
+            if (selectedItem) {
+                setConcerts(prev => prev.map(concert => 
+                    concert.concert_id === selectedItem.concert_id
+                        ? { ...concert, ...concertsForm, concert_id: selectedItem.concert_id }
+                        : concert
+                ));
+            } else {
+                // For new concert
+                const newConcert = {
+                    ...concertsForm,
+                    concert_id: data.id // Make sure your API returns the new ID
+                };
+                setConcerts(prev => [...prev, newConcert]);
+            }
+
+            setIsModalOpen(false);
+            setSelectedItem(null);
+            setConcertsForm({
+                name: '',
+                date: '',
+                time: '',
+                location: '',
+                details: '',
+                genre: '',
+                price: '',
+                status: 'upcoming'
+            });
+            
+            alert(selectedItem ? 'Concert updated successfully' : 'Concert added successfully');
+        } else {
+            throw new Error(data.message || 'Error submitting form');
+        }
     } catch (error) {
-      console.error('Form submission error:', error);
-      alert('Error saving concert. Please try again.');
+        console.error('Form submission error:', error);
+        alert(`Error saving concert: ${error.message}`);
     }
-  };
+};
 
   const FormInput = ({ label, name, type = 'text', ...props }) => (
     <div className="mb-4">
