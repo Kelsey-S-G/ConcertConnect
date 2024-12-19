@@ -162,21 +162,6 @@ const ConcertManagement = () => {
     });
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedItem(null);
-    setConcertsForm({
-      id: '',
-      name: '',
-      date: '',
-      time: '',
-      location: '',
-      details: '',
-      genre: '',
-      price: '',
-      status: 'upcoming'
-    });
-  };
 
   const FormInput = ({ label, name, type = 'text', ...props }) => (
     <div className="mb-4">
