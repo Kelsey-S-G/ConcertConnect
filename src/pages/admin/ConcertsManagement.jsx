@@ -18,8 +18,7 @@ const ConcertManagement = () => {
     status: 'upcoming'
   });
 
-  // Update the API base URL to match your actual API path
-  const API_BASE_URL = '/api/concerts'; // Adjust this to match your actual API base URL
+  const API_BASE_URL = '/api/concerts';
 
   useEffect(() => {
     fetchConcerts();
@@ -33,7 +32,13 @@ const ConcertManagement = () => {
       }
       const data = await response.json();
       if (data.status === 'success') {
-        setConcerts(data.concerts);
+        // Format dates and times for display
+        const formattedConcerts = data.concerts.map(concert => ({
+          ...concert,
+          date: concert.date ? concert.date.split(' ')[0] : '', // Extract date part only
+          time: concert.time || ''
+        }));
+        setConcerts(formattedConcerts);
       } else {
         console.error('Error fetching concerts:', data.message);
       }
@@ -45,16 +50,17 @@ const ConcertManagement = () => {
   };
 
   const handleEdit = (concert) => {
+    // Format the date and time for the form inputs
     const formData = {
       id: concert.concert_id,
-      name: concert.name,
-      date: concert.date,
-      time: concert.time,
-      location: concert.location,
+      name: concert.name || '',
+      date: concert.date || '',
+      time: concert.time || '',
+      location: concert.location || '',
       details: concert.details || '',
-      genre: concert.genre,
-      price: concert.price,
-      status: concert.status
+      genre: concert.genre || '',
+      price: concert.price || '',
+      status: concert.status || 'upcoming'
     };
     
     setSelectedItem(concert);
@@ -97,17 +103,14 @@ const ConcertManagement = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     
-    // Create FormData object
     const formData = new FormData();
     
-    // If updating, include the concert_id
     if (selectedItem) {
       formData.append('id', selectedItem.concert_id.toString());
     }
     
-    // Append all form fields
     Object.entries(concertsForm).forEach(([key, value]) => {
-      if (key !== 'id' || !selectedItem) { // Skip id if updating
+      if (key !== 'id' || !selectedItem) {
         formData.append(key, value.toString());
       }
     });
@@ -126,14 +129,16 @@ const ConcertManagement = () => {
 
       if (data.status === 'success') {
         if (selectedItem) {
-          // Update existing concert
+          // Update the concerts state with the new data
           setConcerts(prevConcerts => 
             prevConcerts.map(concert => 
               concert.concert_id === selectedItem.concert_id
                 ? {
                     ...concert,
                     ...concertsForm,
-                    concert_id: selectedItem.concert_id
+                    concert_id: selectedItem.concert_id,
+                    date: concertsForm.date,
+                    time: concertsForm.time
                   }
                 : concert
             )
@@ -147,7 +152,7 @@ const ConcertManagement = () => {
           setConcerts(prevConcerts => [...prevConcerts, newConcert]);
         }
         closeModal();
-        fetchConcerts(); // Refresh the list after update
+        fetchConcerts(); // Refresh the list to ensure synchronized data
       } else {
         alert('Error: ' + data.message);
       }
